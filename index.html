@@ -1,3 +1,2709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rebbe Points - Professional Teacher Management System</title>
+  <link rel="icon" type="image/png" href="https://www.canva.com/design/DAGxLYqFHrQ/NZEg7Y3B3f0PitOVM6Ifvg/view"/>
+  <link href="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.12.0/dist/emoji-picker-element.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+   
+    :root {
+      --primary-color: #1ab5f4;
+      --primary-dark: #1495c7;
+      --secondary-color: #64748b;
+      --success-color: #059669;
+      --warning-color: #e7af26;
+      --danger-color: #dc2626;
+      --info-color: #0ea5e9;
+      --background: #f8fafc;
+      --surface: #ffffff;
+      --surface-secondary: #f1f5f9;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --border-color: #e2e8f0;
+      --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --sidebar-width: 280px;
+      --topbar-height: 70px;
+    }
+   
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+   
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--background);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    /* Authentication Screen */
+    .auth-screen {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--warning-color) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      position: relative;
+    }
+   
+    .auth-card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 3rem;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+    }
+   
+    .auth-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+   
+    .auth-subtitle {
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+   
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+   
+    .form-label {
+      display: block;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+   
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.2s;
+      background: var(--surface);
+    }
+   
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgb(26 181 244 / 0.1);
+    }
+   
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+   
+    .btn-primary {
+      background: var(--primary-color);
+      color: var(--surface);
+    }
+   
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+   
+    .btn-secondary {
+      background: var(--secondary-color);
+      color: var(--surface);
+    }
+   
+    .btn-success {
+      background: var(--success-color);
+      color: var(--surface);
+    }
+   
+    .btn-warning {
+      background: var(--warning-color);
+      color: var(--surface);
+    }
+   
+    .btn-danger {
+      background: var(--danger-color);
+      color: var(--surface);
+    }
+
+    .btn-info {
+      background: var(--info-color);
+      color: var(--surface);
+    }
+   
+    .btn-full {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+   
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+   
+    .account-type-selection {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+   
+    .account-type-btn {
+      padding: 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--surface);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      font-weight: 500;
+    }
+   
+    .account-type-btn.active {
+      border-color: var(--primary-color);
+      background: rgb(26 181 244 / 0.05);
+      color: var(--primary-color);
+    }
+   
+    .auth-switch {
+      color: var(--primary-color);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+   
+    .error-message, .success-message {
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      display: none;
+    }
+   
+    .error-message {
+      background: rgb(220 38 38 / 0.1);
+      color: var(--danger-color);
+      border: 1px solid rgb(220 38 38 / 0.2);
+    }
+   
+    .success-message {
+      background: rgb(5 150 105 / 0.1);
+      color: var(--success-color);
+      border: 1px solid rgb(5 150 105 / 0.2);
+    }
+
+    /* Corner Buttons */
+    .corner-button {
+      position: fixed;
+      bottom: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      color: var(--surface);
+      text-decoration: none;
+      z-index: 100;
+    }
+
+    .about-button {
+      left: 1rem;
+    }
+
+    .how-to-use-button {
+      right: 1rem;
+    }
+
+    /* Sidebar Layout */
+    .app-layout {
+      display: none;
+      min-height: 100vh;
+    }
+   
+    .app-layout.active {
+      display: flex;
+    }
+   
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--surface);
+      border-right: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 100;
+      transform: translateX(0);
+      transition: transform 0.3s ease;
+    }
+   
+    .sidebar-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+   
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+   
+    .sidebar-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+   
+    .sidebar-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+   
+    .sidebar-nav {
+      padding: 1rem 0;
+    }
+   
+    .nav-section {
+      margin-bottom: 2rem;
+    }
+   
+    .nav-section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+   
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      border-left: 3px solid transparent;
+    }
+   
+    .nav-item:hover {
+      background: var(--surface-secondary);
+      color: var(--text-primary);
+    }
+   
+    .nav-item.active {
+      background: rgb(26 181 244 / 0.1);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+    }
+   
+    .nav-icon {
+      font-size: 1.25rem;
+      width: 20px;
+      text-align: center;
+    }
+   
+    .sidebar-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1.5rem;
+      border-top: 1px solid var(--border-color);
+      background: var(--surface);
+    }
+   
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+   
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      color: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+   
+    .user-details h4 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+   
+    .user-details p {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+   
+    /* Main Content Area */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      width: calc(100% - var(--sidebar-width));
+      transition: margin-left 0.3s ease;
+    }
+   
+    .topbar {
+      height: var(--topbar-height);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+   
+    .hamburger-menu {
+      display: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      color: var(--text-primary);
+    }
+   
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+   
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+   
+    .class-selector {
+      min-width: 200px;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+   
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+   
+    .search-input {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      min-width: 250px;
+      background: var(--surface);
+    }
+   
+    .content-area {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+   
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+   
+    .view-toggle {
+      display: flex;
+      background: var(--surface-secondary);
+      border-radius: 8px;
+      padding: 0.25rem;
+    }
+   
+    .view-option {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+   
+    .view-option.active {
+      background: var(--surface);
+      color: var(--text-primary);
+      box-shadow: var(--shadow);
+    }
+   
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* Admin Styles */
+    .admin-header {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+    }
+   
+    .admin-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+   
+    .admin-controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+   
+    .admin-content {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    .admin-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--surface-secondary);
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    /* Student Cards */
+    .students-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .students-list {
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .student-list-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .student-list-item:hover {
+      box-shadow: var(--shadow);
+      background: var(--surface-secondary);
+    }
+
+    .student-list-item.selected {
+      border-color: var(--primary-color);
+      background: rgb(26 181 244 / 0.05);
+    }
+
+    .student-list-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      color: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      overflow: hidden;
+    }
+
+    .student-list-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .student-list-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .student-list-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .student-list-details {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .student-list-points {
+      font-weight: 700;
+      color: var(--primary-color);
+      font-size: 1.125rem;
+    }
+
+    .student-list-actions {
+      display: flex;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .student-list-item:hover .student-list-actions {
+      opacity: 1;
+    }
+   
+    .student-card {
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+   
+    .student-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .student-card.selected {
+      border-color: var(--primary-color);
+      background: rgb(26 181 244 / 0.05);
+    }
+   
+    .student-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      color: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0 auto 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .student-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+   
+    .student-name {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+   
+    .student-points {
+      color: var(--primary-color);
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .student-rewards {
+      font-size: 0.875rem;
+      color: var(--success-color);
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .student-instant-rewards {
+      font-size: 0.875rem;
+      color: var(--info-color);
+      font-weight: 500;
+    }
+   
+    .add-student-card {
+      background: var(--surface-secondary);
+      border: 2px dashed var(--border-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+   
+    .add-student-card:hover {
+      border-color: var(--primary-color);
+      background: rgb(26 181 244 / 0.05);
+    }
+   
+    .add-student-icon {
+      font-size: 2rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Class Detail View */
+    .class-detail-card {
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      transition: all 0.2s;
+    }
+
+    .class-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1.5rem;
+    }
+
+    .class-detail-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .class-detail-teacher {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .class-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .class-stat {
+      text-align: center;
+      padding: 1rem;
+      background: var(--surface-secondary);
+      border-radius: 8px;
+    }
+
+    .class-stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 0.25rem;
+    }
+
+    .class-stat-label {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .students-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .students-table th,
+    .students-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .students-table th {
+      font-weight: 600;
+      color: var(--text-primary);
+      background: var(--surface-secondary);
+    }
+
+    .students-table tbody tr:hover {
+      background: var(--surface-secondary);
+    }
+
+    /* Rewards Section */
+    .rewards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .reward-card {
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .reward-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .reward-card.instant-reward {
+      border-left: 4px solid var(--info-color);
+    }
+
+    .reward-card.points-reward {
+      border-left: 4px solid var(--success-color);
+    }
+
+    .reward-type-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .instant-badge {
+      background: rgb(14 165 233 / 0.1);
+      color: var(--info-color);
+    }
+
+    .points-badge {
+      background: rgb(5 150 105 / 0.1);
+      color: var(--success-color);
+    }
+
+    .reward-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+
+    .reward-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .reward-points {
+      background: var(--primary-color);
+      color: var(--surface);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .reward-description {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .reward-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* Leaderboard */
+    .leaderboard-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 0.75rem;
+    }
+   
+    .leaderboard-rank {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--surface);
+      font-size: 0.875rem;
+    }
+   
+    .rank-1 { background: var(--warning-color); }
+    .rank-2 { background: #9ca3af; }
+    .rank-3 { background: #f59e0b; }
+    .leaderboard-rank:not(.rank-1):not(.rank-2):not(.rank-3) {
+      background: var(--primary-color);
+    }
+   
+    .leaderboard-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      color: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      overflow: hidden;
+    }
+
+    .leaderboard-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+   
+    .leaderboard-name {
+      flex: 1;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+   
+    .leaderboard-points {
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    /* Bulk Actions */
+    .bulk-actions {
+      display: none;
+      background: rgb(26 181 244 / 0.1);
+      border: 1px solid rgb(26 181 244 / 0.2);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+   
+    .bulk-actions.active {
+      display: flex;
+    }
+   
+    .selected-count {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+   
+    .bulk-point-input {
+      width: 80px;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    /* Modals */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      padding: 1rem;
+    }
+   
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+   
+    .modal-content {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-content.large {
+      max-width: 800px;
+    }
+   
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+   
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+   
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 0.25rem;
+    }
+   
+    .modal-footer {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+    }
+
+    /* File upload styles */
+    .file-upload {
+      display: none;
+    }
+
+    .upload-area {
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 1rem;
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary-color);
+      background: rgb(26 181 244 / 0.05);
+    }
+
+    .upload-area.dragover {
+      border-color: var(--primary-color);
+      background: rgb(26 181 244 / 0.1);
+    }
+
+    /* Reward Type Toggle */
+    .reward-type-toggle {
+      display: flex;
+      background: var(--surface-secondary);
+      border-radius: 8px;
+      padding: 0.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .reward-type-option {
+      flex: 1;
+      padding: 0.75rem;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .reward-type-option.active {
+      background: var(--surface);
+      color: var(--text-primary);
+      box-shadow: var(--shadow);
+    }
+
+    /* Notification Styles */
+    .notification {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      transition: opacity 0.3s;
+      opacity: 0;
+    }
+
+    .notification.active {
+      opacity: 1;
+    }
+
+    .notification.success {
+      border-color: var(--success-color);
+      color: var(--success-color);
+    }
+
+    .notification.error {
+      border-color: var(--danger-color);
+      color: var(--danger-color);
+    }
+
+    /* Extras Styles */
+    .extras-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .extra-item {
+      padding: 1rem;
+      background: var(--surface-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .extra-item:hover {
+      background: rgb(26 181 244 / 0.05);
+    }
+
+    #embed-container {
+      margin-top: 2rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      width: 100%;
+      height: 500px;
+      position: relative;
+    }
+
+    #embed-container.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1000;
+      border: none;
+      margin: 0;
+    }
+
+    /* Powerup Styles */
+    .powerup-card {
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.2s;
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    .powerup-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .powerup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+
+    .powerup-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .powerup-description {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .powerup-details {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    /* Emoji Picker */
+    .emoji-picker-container {
+      margin-bottom: 1rem;
+    }
+
+    /* Copy Button */
+    .copy-button {
+      margin-left: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 1024px) {
+      .hamburger-menu {
+        display: block;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .main-content.sidebar-active {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .students-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .rewards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .class-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .topbar {
+        padding: 0 1rem;
+      }
+
+      .search-input {
+        min-width: auto;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+      }
+
+      .action-buttons .btn {
+        width: 100%;
+      }
+
+      .bulk-actions {
+        flex-direction: column;
+      }
+
+      .account-type-selection {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-card {
+        padding: 2rem;
+      }
+
+      .modal-content {
+        padding: 1.5rem;
+      }
+
+      .extras-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .class-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .view-toggle {
+        width: 100%;
+        justify-content: space-around;
+      }
+
+      .view-option {
+        padding: 0.5rem 0.5rem;
+      }
+
+      .topbar {
+        padding: 0.5rem;
+      }
+
+      .content-area {
+        padding: 1rem;
+      }
+
+      .sidebar {
+        width: 250px;
+      }
+
+      .nav-item {
+        padding: 0.75rem 1rem;
+      }
+
+      #embed-container {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card" id="authCard">
+      <h1 class="auth-title" id="authTitle">Login</h1>
+      <p class="auth-subtitle" id="authSubtitle">Welcome to Rebbe Points</p>
+      <div class="error-message" id="authError"></div>
+      <div class="account-type-selection" id="accountTypeSelection" style="display: none;">
+        <button class="account-type-btn active" data-type="admin" onclick="selectAccountType('admin')">Admin</button>
+        <button class="account-type-btn" data-type="teacher" onclick="selectAccountType('teacher')">Teacher</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input class="form-input" id="username" type="text" placeholder="Enter your username">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input class="form-input" id="password" type="password" placeholder="Enter your password">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="login()" id="authButton">Login</button>
+      <p class="text-center">Don't have an account? <span class="auth-switch" onclick="switchAuthMode('register')">Register</span></p>
+    </div>
+    <a class="btn btn-info corner-button about-button" href="#">About</a>
+    <a class="btn btn-info corner-button how-to-use-button" href="#">How to Use</a>
+  </div>
+
+  <div class="app-layout" id="appLayout">
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <img src="https://res.cloudinary.com/dzlhbhuua/image/upload/c_fill,g_auto,w_40,h_40,r_max/v1730151234/Rebbe_Points_Logo_Circle_hazw7v.png" alt="Logo">
+        </div>
+        <h1 class="sidebar-title">Rebbe Points</h1>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Navigation</div>
+          <div class="nav-item active" data-view="dashboard" onclick="navigateTo('dashboard')">
+            <span class="nav-icon">🏠</span> Dashboard
+          </div>
+          <div class="nav-item" data-view="students" onclick="navigateTo('students')">
+            <span class="nav-icon">👥</span> Students
+          </div>
+          <div class="nav-item" data-view="rewards" onclick="navigateTo('rewards')">
+            <span class="nav-icon">🎁</span> Rewards
+          </div>
+          <div class="nav-item" data-view="leaderboard" onclick="navigateTo('leaderboard')">
+            <span class="nav-icon">🏆</span> Leaderboard
+          </div>
+          <div class="nav-item" data-view="history" onclick="navigateTo('history')">
+            <span class="nav-icon">📜</span> History
+          </div>
+          <div class="nav-item" data-view="extras" onclick="navigateTo('extras')">
+            <span class="nav-icon">⭐</span> Extras
+          </div>
+          <div class="nav-item" data-view="settings" onclick="navigateTo('settings')">
+            <span class="nav-icon">⚙️</span> Settings
+          </div>
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar"></div>
+          <div class="user-details">
+            <h4 id="userName"></h4>
+            <p id="userRole"></p>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-full" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div class="topbar-left">
+          <span class="hamburger-menu" onclick="toggleSidebar()">☰</span>
+          <h2 class="page-title" id="pageTitle"></h2>
+          <select class="class-selector" id="classSelector"></select>
+        </div>
+        <div class="topbar-right">
+          <input class="search-input" id="searchInput" type="text" placeholder="Search..." oninput="onSearchChange()">
+        </div>
+      </div>
+      <div class="content-area" id="contentArea"></div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal" id="createClassModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Create New Class</h2>
+        <button class="modal-close" onclick="closeModal('createClassModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="className">Class Name</label>
+        <input class="form-input" id="className" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="teacherUsername">Teacher Username</label>
+        <input class="form-input" id="teacherUsername" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="teacherPassword">Teacher Password</label>
+        <input class="form-input" id="teacherPassword" type="password">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('createClassModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createClassAndTeacher()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="addTeacherToClassModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Teacher to Class</h2>
+        <button class="modal-close" onclick="closeModal('addTeacherToClassModal')">&times;</button>
+      </div>
+      <p>Note: If the username doesn't exist, it will be created as a new teacher account. Provide a password for new accounts.</p>
+      <div class="form-group">
+        <label class="form-label" for="addTeacherUsername">Teacher Username</label>
+        <input class="form-input" id="addTeacherUsername" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="addTeacherPassword">Password (required for new teachers)</label>
+        <input class="form-input" id="addTeacherPassword" type="password">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addTeacherToClassModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addTeacherToClass()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="createAdminModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Create Admin Account</h2>
+        <button class="modal-close" onclick="closeModal('createAdminModal')">&times;</button>
+      </div>
+      <div class="account-type-selection">
+        <button class="account-type-btn active" data-type="admin" onclick="selectAccountType('admin')">Admin</button>
+        <button class="account-type-btn" data-type="teacher" onclick="selectAccountType('teacher')">Teacher</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="adminUsername">Username</label>
+        <input class="form-input" id="adminUsername" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="adminPassword">Password</label>
+        <input class="form-input" id="adminPassword" type="password">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="schoolName">School Name</label>
+        <input class="form-input" id="schoolName" type="text">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('createAdminModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createAdminAccount()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="addStudentModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Student</h2>
+        <button class="modal-close" onclick="closeModal('addStudentModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="studentName">Student Name</label>
+        <input class="form-input" id="studentName" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="initialPoints">Initial Points</label>
+        <input class="form-input" id="initialPoints" type="number" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="studentNotes">Notes</label>
+        <textarea class="form-input" id="studentNotes"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="studentPhoto">Student Photo</label>
+        <input class="file-upload" id="studentPhoto" type="file" accept="image/*">
+        <div class="upload-area" onclick="document.getElementById('studentPhoto').click()">
+          Click or drag to upload photo
+        </div>
+        <img id="photoPreview" style="display: none; max-width: 100%; margin-top: 1rem;">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addStudentModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addStudent()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="editStudentModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Student</h2>
+        <button class="modal-close" onclick="closeModal('editStudentModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editStudentName">Student Name</label>
+        <input class="form-input" id="editStudentName" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editStudentNotes">Notes</label>
+        <textarea class="form-input" id="editStudentNotes"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editStudentPhoto">Student Photo</label>
+        <input class="file-upload" id="editStudentPhoto" type="file" accept="image/*">
+        <div class="upload-area" onclick="document.getElementById('editStudentPhoto').click()">
+          Click or drag to upload photo
+        </div>
+        <img id="editPhotoPreview" style="display: none; max-width: 100%; margin-top: 1rem;">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('editStudentModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="updateStudent()">Update</button>
+        <button class="btn btn-danger" onclick="deleteStudent()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="studentPointsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="studentModalTitle"></h2>
+        <button class="modal-close" onclick="closeModal('studentPointsModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pointsChange">Points Change</label>
+        <input class="form-input" id="pointsChange" type="number">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pointsReason">Reason</label>
+        <select class="form-input" id="pointsReason">
+          <option value="">Select a reason or type a new one</option>
+        </select>
+        <input class="form-input" id="pointsReasonInput" type="text" placeholder="Or type a new reason">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('studentPointsModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="updateStudentPoints()">Update</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="createRewardModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Create Reward</h2>
+        <button class="modal-close" onclick="closeModal('createRewardModal')">&times;</button>
+      </div>
+      <div class="reward-type-toggle">
+        <button class="reward-type-option active" data-type="points" onclick="selectRewardType('points', 'create')">Points Reward</button>
+        <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant', 'create')">Instant Reward</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="rewardTitle">Title</label>
+        <input class="form-input" id="rewardTitle" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="rewardDescription">Description</label>
+        <textarea class="form-input" id="rewardDescription"></textarea>
+      </div>
+      <div class="form-group" id="pointsRequiredGroup">
+        <label class="form-label" for="rewardPoints">Points Required</label>
+        <input class="form-input" id="rewardPoints" type="number">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="rewardIcon">Icon (Emoji)</label>
+        <input class="form-input" id="rewardIcon" type="text" placeholder="Select an emoji">
+        <div class="emoji-picker-container">
+          <emoji-picker id="emojiPickerCreate"></emoji-picker>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('createRewardModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createReward()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="editRewardModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Reward</h2>
+        <button class="modal-close" onclick="closeModal('editRewardModal')">&times;</button>
+      </div>
+      <div class="reward-type-toggle">
+        <button class="reward-type-option" data-type="points" onclick="selectRewardType('points', 'edit')">Points Reward</button>
+        <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant', 'edit')">Instant Reward</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editRewardTitle">Title</label>
+        <input class="form-input" id="editRewardTitle" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editRewardDescription">Description</label>
+        <textarea class="form-input" id="editRewardDescription"></textarea>
+      </div>
+      <div class="form-group" id="editPointsRequiredGroup">
+        <label class="form-label" for="editRewardPoints">Points Required</label>
+        <input class="form-input" id="editRewardPoints" type="number">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editRewardIcon">Icon (Emoji)</label>
+        <input class="form-input" id="editRewardIcon" type="text" placeholder="Select an emoji">
+        <div class="emoji-picker-container">
+          <emoji-picker id="emojiPickerEdit"></emoji-picker>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('editRewardModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="updateReward()">Update</button>
+        <button class="btn btn-danger" onclick="deleteReward()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="claimRewardModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Claim Reward</h2>
+        <button class="modal-close" onclick="closeModal('claimRewardModal')">&times;</button>
+      </div>
+      <div id="claimRewardContent"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('claimRewardModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmClaimReward()">Claim</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="instantRewardModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Give Instant Reward</h2>
+        <button class="modal-close" onclick="closeModal('instantRewardModal')">&times;</button>
+      </div>
+      <div id="instantRewardContent"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('instantRewardModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmGiveInstantReward()">Give</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="addMultipleModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Multiple Students</h2>
+        <button class="modal-close" onclick="closeModal('addMultipleModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="multipleNames">Student Names (one per line)</label>
+        <textarea class="form-input" id="multipleNames" rows="5"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addMultipleModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addMultipleStudents()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="bulkPointsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="bulkModalTitle"></h2>
+        <button class="modal-close" onclick="closeModal('bulkPointsModal')">&times;</button>
+      </div>
+      <p id="bulkSummary"></p>
+      <div class="form-group">
+        <label class="form-label" for="bulkReason">Reason</label>
+        <select class="form-input" id="bulkReason">
+          <option value="">Select a reason or type a new one</option>
+        </select>
+        <input class="form-input" id="bulkReasonInput" type="text" placeholder="Or type a new reason">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('bulkPointsModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmBulkPoints()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="classDetailModal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h2 class="modal-title" id="classDetailTitle"></h2>
+        <button class="modal-close" onclick="closeModal('classDetailModal')">&times;</button>
+      </div>
+      <div id="classDetailContent"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('classDetailModal')">Close</button>
+        <button class="btn btn-primary" onclick="openEditTeacherModal()">Edit Teacher</button>
+        <button class="btn btn-danger" id="deleteClassBtn">Delete Class</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="editTeacherModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Teacher</h2>
+        <button class="modal-close" onclick="closeModal('editTeacherModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editTeacherUsername">Username</label>
+        <input class="form-input" id="editTeacherUsername" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editTeacherPassword">New Password</label>
+        <input class="form-input" id="editTeacherPassword" type="password">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editTeacherConfirmPassword">Confirm Password</label>
+        <input class="form-input" id="editTeacherConfirmPassword" type="password">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('editTeacherModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="updateTeacher()">Update</button>
+        <button class="btn btn-danger" onclick="deleteTeacher()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="createPowerupModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Create Power Up</h2>
+        <button class="modal-close" onclick="closeModal('createPowerupModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="powerupName">Name</label>
+        <input class="form-input" id="powerupName" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="powerupDescription">Description</label>
+        <textarea class="form-input" id="powerupDescription"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="powerupMultiplier">Multiplier</label>
+        <input class="form-input" id="powerupMultiplier" type="number" step="0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="powerupDuration">Duration (days)</label>
+        <input class="form-input" id="powerupDuration" type="number">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('createPowerupModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createPowerup()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="editPowerupModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Power Up</h2>
+        <button class="modal-close" onclick="closeModal('editPowerupModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editPowerupName">Name</label>
+        <input class="form-input" id="editPowerupName" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editPowerupDescription">Description</label>
+        <textarea class="form-input" id="editPowerupDescription"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editPowerupMultiplier">Multiplier</label>
+        <input class="form-input" id="editPowerupMultiplier" type="number" step="0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="editPowerupDuration">Duration (days)</label>
+        <input class="form-input" id="editPowerupDuration" type="number">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('editPowerupModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="updatePowerup()">Update</button>
+        <button class="btn btn-danger" onclick="deletePowerup()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="addExtraModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Add New Extra</h2>
+        <button class="modal-close" onclick="closeModal('addExtraModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="extraName">Name</label>
+        <input class="form-input" id="extraName" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="extraUrl">URL</label>
+        <input class="form-input" id="extraUrl" type="url">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addExtraModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addExtra()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="editLogoModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Logo and Favicon</h2>
+        <button class="modal-close" onclick="closeModal('editLogoModal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="logoUrl">Logo URL (Canva or other)</label>
+        <input class="form-input" id="logoUrl" type="url" placeholder="Enter logo URL">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="faviconUrl">Favicon URL</label>
+        <input class="form-input" id="faviconUrl" type="url" placeholder="Enter favicon URL">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('editLogoModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="updateLogo()">Update</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.12.0/dist/index.js"></script>
+  <script>
+    const LOGO_URL = 'https://res.cloudinary.com/dzlhbhuua/image/upload/c_fill,g_auto,w_40,h_40,r_max/v1730151234/Rebbe_Points_Logo_Circle_hazw7v.png';
+    const FAVICON_URL = 'https://www.canva.com/design/DAGxLYqFHrQ/NZEg7Y3B3f0PitOVM6Ifvg/view';
+
+    let currentUser = null;
+    let currentClassId = null;
+    let currentView = 'dashboard';
+    let currentRewardView = 'rewards';
+    let bulkMode = false;
+    let selectedStudents = new Set();
+    let selectedRewardType = 'points';
+    let currentStudentId = null;
+    let currentRewardId = null;
+    let currentPowerupId = null;
+    let currentTeacherUsername = null;
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    let schools = JSON.parse(localStorage.getItem('schools') || '{}');
+    let userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    let students = JSON.parse(localStorage.getItem('students') || '{}');
+    let history = JSON.parse(localStorage.getItem('history') || '{}');
+    let rewards = JSON.parse(localStorage.getItem('rewards') || '{}');
+    let powerups = JSON.parse(localStorage.getItem('powerups') || '{}');
+    let reasons = JSON.parse(localStorage.getItem('reasons') || '{}');
+    let extras = JSON.parse(localStorage.getItem('extras') || '{}');
+
+    function generateId() {
+      return 'xxxx-xxxx-xxxx-xxxx'.replace(/[x]/g, () => (Math.random() * 16 | 0).toString(16));
+    }
+
+    function saveData() {
+      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.setItem('schools', JSON.stringify(schools));
+      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('students', JSON.stringify(students));
+      localStorage.setItem('history', JSON.stringify(history));
+      localStorage.setItem('rewards', JSON.stringify(rewards));
+      localStorage.setItem('powerups', JSON.stringify(powerups));
+      localStorage.setItem('reasons', JSON.stringify(reasons));
+      localStorage.setItem('extras', JSON.stringify(extras));
+    }
+
+    function sanitizeHTML(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function showNotification(message, type) {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.className = `notification ${type} active`;
+      setTimeout(() => {
+        notification.className = 'notification';
+      }, 3000);
+    }
+
+    function init() {
+      if (currentUser) {
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('appLayout').classList.add('active');
+        document.getElementById('userName').textContent = currentUser;
+        document.getElementById('userRole').textContent = users[currentUser].type;
+        document.getElementById('userAvatar').textContent = currentUser[0].toUpperCase();
+        updateClassSelector();
+        renderContent();
+      }
+      setupFileUpload('studentPhoto', 'photoPreview');
+      setupFileUpload('editStudentPhoto', 'editPhotoPreview');
+      setupEmojiPickers();
+    }
+
+    function setupFileUpload(inputId, previewId) {
+      const input = document.getElementById(inputId);
+      const preview = document.getElementById(previewId);
+      const uploadArea = input.parentElement.querySelector('.upload-area');
+
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          input.files = e.dataTransfer.files;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    function setupEmojiPickers() {
+      const createPicker = document.getElementById('emojiPickerCreate');
+      const editPicker = document.getElementById('emojiPickerEdit');
+      
+      createPicker.addEventListener('emoji-click', (event) => {
+        document.getElementById('rewardIcon').value = event.detail.unicode;
+      });
+
+      editPicker.addEventListener('emoji-click', (event) => {
+        document.getElementById('editRewardIcon').value = event.detail.unicode;
+      });
+    }
+
+    function selectAccountType(type) {
+      selectedAccountType = type;
+      document.querySelectorAll('#accountTypeSelection .account-type-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`#accountTypeSelection .account-type-btn[data-type="${type}"]`).classList.add('active');
+    }
+
+    function switchAuthMode(mode) {
+      const authTitle = document.getElementById('authTitle');
+      const authSubtitle = document.getElementById('authSubtitle');
+      const authButton = document.getElementById('authButton');
+      const accountTypeSelection = document.getElementById('accountTypeSelection');
+      
+      if (mode === 'register') {
+        authTitle.textContent = 'Register';
+        authSubtitle.textContent = 'Create a new account';
+        authButton.textContent = 'Register';
+        authButton.onclick = register;
+        accountTypeSelection.style.display = 'grid';
+        document.querySelector('.auth-switch').textContent = 'Login';
+        document.querySelector('.auth-switch').onclick = () => switchAuthMode('login');
+      } else {
+        authTitle.textContent = 'Login';
+        authSubtitle.textContent = 'Welcome to Rebbe Points';
+        authButton.textContent = 'Login';
+        authButton.onclick = login;
+        accountTypeSelection.style.display = 'none';
+        document.querySelector('.auth-switch').textContent = 'Register';
+        document.querySelector('.auth-switch').onclick = () => switchAuthMode('register');
+      }
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('authError').style.display = 'none';
+    }
+
+    function login() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const error = document.getElementById('authError');
+      
+      if (!username || !password) {
+        error.textContent = 'Please fill in all fields';
+        error.style.display = 'block';
+        return;
+      }
+      
+      if (users[username] && users[username].password === password) {
+        currentUser = username;
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('appLayout').classList.add('active');
+        document.getElementById('userName').textContent = username;
+        document.getElementById('userRole').textContent = users[username].type;
+        document.getElementById('userAvatar').textContent = username[0].toUpperCase();
+        updateClassSelector();
+        renderContent();
+      } else {
+        error.textContent = 'Invalid username or password';
+        error.style.display = 'block';
+      }
+    }
+
+    function register() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const error = document.getElementById('authError');
+      
+      if (!username || !password) {
+        error.textContent = 'Please fill in all fields';
+        error.style.display = 'block';
+        return;
+      }
+      
+      if (users[username]) {
+        error.textContent = 'Username already exists';
+        error.style.display = 'block';
+        return;
+      }
+      
+      users[username] = { password, type: selectedAccountType, school: null };
+      userData[username] = { classes: [], students: {}, history: {}, rewards: {}, powerups: {}, extras: {} };
+      
+      if (selectedAccountType === 'admin') {
+        const schoolId = generateId();
+        users[username].school = schoolId;
+        schools[schoolId] = { name: 'New School', admins: [username], teachers: [] };
+      }
+      
+      saveData();
+      showNotification('Registration successful! Please login.', 'success');
+      switchAuthMode('login');
+    }
+
+    function logout() {
+      currentUser = null;
+      currentClassId = null;
+      currentView = 'dashboard';
+      bulkMode = false;
+      selectedStudents.clear();
+      document.getElementById('appLayout').classList.remove('active');
+      document.getElementById('authScreen').style.display = 'flex';
+      switchAuthMode('login');
+    }
+
+    function updateClassSelector() {
+      const selector = document.getElementById('classSelector');
+      selector.innerHTML = '<option value="">Select a class</option>';
+      if (userData[currentUser]?.classes) {
+        userData[currentUser].classes.forEach(cls => {
+          const option = document.createElement('option');
+          option.value = cls.id;
+          option.textContent = cls.name;
+          selector.appendChild(option);
+        });
+      }
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.querySelector('.main-content');
+      sidebar.classList.toggle('active');
+      mainContent.classList.toggle('sidebar-active');
+    }
+
+    function navigateTo(view) {
+      currentView = view;
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      document.querySelector(`.nav-item[data-view="${view}"]`).classList.add('
+active');
+      document.getElementById('pageTitle').textContent = view.charAt(0).toUpperCase() + view.slice(1);
+      bulkMode = false;
+      selectedStudents.clear();
+      renderContent();
+    }
+
+    function renderContent() {
+      const contentArea = document.getElementById('contentArea');
+      document.getElementById('searchInput').value = '';
+      bulkMode = false;
+      selectedStudents.clear();
+      contentArea.innerHTML = '';
+
+      if (currentView === 'dashboard') {
+        renderDashboard();
+      } else if (currentView === 'students') {
+        renderStudents();
+      } else if (currentView === 'rewards') {
+        renderRewards();
+      } else if (currentView === 'leaderboard') {
+        renderLeaderboard();
+      } else if (currentView === 'history') {
+        renderHistory();
+      } else if (currentView === 'extras') {
+        renderExtras();
+      } else if (currentView === 'settings') {
+        renderSettings();
+      }
+    }
+
+    function renderDashboard() {
+      const contentArea = document.getElementById('contentArea');
+      if (users[currentUser].type === 'admin') {
+        contentArea.innerHTML = `
+          <div class="admin-header">
+            <h2 class="admin-title">Admin Dashboard</h2>
+            <div class="admin-stats">
+              <div class="stat-card">
+                <div class="stat-value">${Object.keys(schools[users[currentUser].school]?.teachers || {}).length}</div>
+                <div class="stat-label">Teachers</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">${userData[currentUser]?.classes?.length || 0}</div>
+                <div class="stat-label">Classes</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">${Object.values(students).filter(s => s.classId === currentClassId).length}</div>
+                <div class="stat-label">Students</div>
+              </div>
+            </div>
+            <div class="admin-controls">
+              <button class="btn btn-primary" onclick="openModal('createClassModal')">Create Class</button>
+              <button class="btn btn-primary" onclick="openModal('createAdminModal')">Create Account</button>
+              <button class="btn btn-primary" onclick="openModal('addTeacherToClassModal')">Add Teacher</button>
+            </div>
+          </div>
+          <div class="admin-content">
+            <h3>Classes</h3>
+            <div class="students-grid" id="classesGrid"></div>
+          </div>
+        `;
+        renderClasses();
+      } else {
+        contentArea.innerHTML = `
+          <div class="content-header">
+            <h2>Overview</h2>
+          </div>
+          <div class="class-stats">
+            <div class="class-stat">
+              <div class="class-stat-value">${userData[currentUser]?.classes?.length || 0}</div>
+              <div class="class-stat-label">Classes</div>
+            </div>
+            <div class="class-stat">
+              <div class="class-stat-value">${Object.values(students).filter(s => s.classId === currentClassId).length}</div>
+              <div class="class-stat-label">Students</div>
+            </div>
+            <div class="class-stat">
+              <div class="class-stat-value">${Object.values(rewards).filter(r => r.classId === currentClassId).length}</div>
+              <div class="class-stat-label">Rewards</div>
+            </div>
+            <div class="class-stat">
+              <div class="class-stat-value">${Object.values(powerups).filter(p => p.classId === currentClassId).length}</div>
+              <div class="class-stat-label">Power Ups</div>
+            </div>
+          </div>
+          <div class="leaderboard">
+            <h3>Top Students</h3>
+            <div id="topStudents"></div>
+          </div>
+        `;
+        renderTopStudents();
+      }
+    }
+
+    function renderClasses() {
+      const classesGrid = document.getElementById('classesGrid');
+      classesGrid.innerHTML = '';
+      userData[currentUser]?.classes?.forEach(cls => {
+        const classCard = document.createElement('div');
+        classCard.className = 'class-detail-card';
+        classCard.innerHTML = `
+          <div class="class-detail-header">
+            <div>
+              <h3 class="class-detail-title">${sanitizeHTML(cls.name)}</h3>
+              <p class="class-detail-teacher">Teacher: ${sanitizeHTML(cls.teacher)}</p>
+            </div>
+            <button class="btn btn-primary" onclick="openClassDetail('${cls.id}')">View Details</button>
+          </div>
+          <div class="class-stats">
+            <div class="class-stat">
+              <div class="class-stat-value">${Object.values(students).filter(s => s.classId === cls.id).length}</div>
+              <div class="class-stat-label">Students</div>
+            </div>
+            <div class="class-stat">
+              <div class="class-stat-value">${Object.values(rewards).filter(r => r.classId === cls.id).length}</div>
+              <div class="class-stat-label">Rewards</div>
+            </div>
+          </div>
+        `;
+        classesGrid.appendChild(classCard);
+      });
+    }
+
+    function renderTopStudents() {
+      const topStudents = Object.values(students)
+        .filter(s => s.classId === currentClassId)
+        .sort((a, b) => b.points - a.points)
+        .slice(0, 5);
+      const topStudentsDiv = document.getElementById('topStudents');
+      topStudents.forEach((student, index) => {
+        const rankClass = `rank-${index + 1}`;
+        const item = document.createElement('div');
+        item.className = 'leaderboard-item';
+        item.innerHTML = `
+          <div class="leaderboard-rank ${rankClass}">${index + 1}</div>
+          <div class="leaderboard-avatar">${student.photo ? `<img src="${student.photo}">` : student.name[0].toUpperCase()}</div>
+          <div class="leaderboard-name">${sanitizeHTML(student.name)}</div>
+          <div class="leaderboard-points">${student.points} pts</div>
+        `;
+        topStudentsDiv.appendChild(item);
+      });
+    }
+
+    function renderStudents() {
+      const contentArea = document.getElementById('contentArea');
+      if (!currentClassId) {
+        contentArea.innerHTML = '<p>Please select a class to view students.</p>';
+        return;
+      }
+      contentArea.innerHTML = `
+        <div class="content-header">
+          <h2>Students</h2>
+          <div class="view-toggle">
+            <button class="view-option active" data-view="grid" onclick="toggleView('grid')">Grid</button>
+            <button class="view-option" data-view="list" onclick="toggleView('list')">List</button>
+          </div>
+        </div>
+        <div class="bulk-actions" id="bulkActions">
+          <span class="selected-count" id="selectedCount">0 students selected</span>
+          <input class="bulk-point-input" id="bulkPoints" type="number" placeholder="Points">
+          <button class="btn btn-primary" onclick="openBulkPointsModal('award')">Award Points</button>
+          <button class="btn btn-danger" onclick="openBulkPointsModal('deduct')">Deduct Points</button>
+          <button class="btn btn-secondary" onclick="clearSelection()">Clear Selection</button>
+        </div>
+        <div class="students-grid" id="studentsGrid"></div>
+        <div class="students-list" id="studentsList"></div>
+        <div class="add-student-card" onclick="openModal('addStudentModal')">
+          <span class="add-student-icon">+</span>
+          <p>Add New Student</p>
+        </div>
+      `;
+      renderStudentGrid();
+      renderStudentList();
+      if (users[currentUser].type === 'teacher') {
+        document.querySelector('.add-student-card').style.display = 'block';
+      } else {
+        document.querySelector('.add-student-card').style.display = 'none';
+      }
+    }
+
+    function toggleView(view) {
+      document.querySelectorAll('.view-option').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.view-option[data-view="${view}"]`).classList.add('active');
+      document.getElementById('studentsGrid').style.display = view === 'grid' ? 'grid' : 'none';
+      document.getElementById('studentsList').style.display = view === 'list' ? 'flex' : 'none';
+    }
+
+    function renderStudentGrid() {
+      const studentsGrid = document.getElementById('studentsGrid');
+      studentsGrid.innerHTML = '';
+      const classStudents = Object.values(students).filter(s => s.classId === currentClassId);
+      classStudents.forEach(student => {
+        const activePowerup = Object.values(powerups).find(p => p.studentId === student.id && p.expiry > Date.now());
+        const card = document.createElement('div');
+        card.className = `student-card ${selectedStudents.has(student.id) ? 'selected' : ''}`;
+        card.onclick = () => toggleStudentSelection(student.id, card);
+        card.innerHTML = `
+          <div class="student-avatar">${student.photo ? `<img src="${student.photo}">` : student.name[0].toUpperCase()}</div>
+          <h3 class="student-name">${sanitizeHTML(student.name)} <button class="btn btn-secondary copy-button" onclick="copyText('${sanitizeHTML(student.name)}')">Copy</button></h3>
+          <p class="student-points">${student.points} points</p>
+          <p class="student-rewards">${student.rewards?.length || 0} rewards claimed</p>
+          <p class="student-instant-rewards">${student.instantRewards?.length || 0} instant rewards</p>
+          ${activePowerup ? `<p class="student-powerup">Power Up: ${sanitizeHTML(activePowerup.name)} (${activePowerup.multiplier}x)</p>` : ''}
+          <div class="action-buttons">
+            <button class="btn btn-primary" onclick="openPointsModal('${student.id}', 'award')">Add Points</button>
+            <button class="btn btn-danger" onclick="openPointsModal('${student.id}', 'deduct')">Deduct Points</button>
+            <button class="btn btn-secondary" onclick="openEditStudentModal('${student.id}')">Edit</button>
+          </div>
+        `;
+        studentsGrid.appendChild(card);
+      });
+    }
+
+    function renderStudentList() {
+      const studentsList = document.getElementById('studentsList');
+      studentsList.innerHTML = '';
+      const classStudents = Object.values(students).filter(s => s.classId === currentClassId);
+      classStudents.forEach(student => {
+        const activePowerup = Object.values(powerups).find(p => p.studentId === student.id && p.expiry > Date.now());
+        const item = document.createElement('div');
+        item.className = `student-list-item ${selectedStudents.has(student.id) ? 'selected' : ''}`;
+        item.onclick = () => toggleStudentSelection(student.id, item);
+        item.innerHTML = `
+          <div class="student-list-avatar">${student.photo ? `<img src="${student.photo}">` : student.name[0].toUpperCase()}</div>
+          <div class="student-list-info">
+            <h4 class="student-list-name">${sanitizeHTML(student.name)} <button class="btn btn-secondary copy-button" onclick="copyText('${sanitizeHTML(student.name)}')">Copy</button></h4>
+            <p class="student-list-details">${student.notes || ''}</p>
+            ${activePowerup ? `<p class="student-list-details">Power Up: ${sanitizeHTML(activePowerup.name)} (${activePowerup.multiplier}x)</p>` : ''}
+          </div>
+          <div class="student-list-points">${student.points} pts</div>
+          <div class="student-list-actions">
+            <button class="btn btn-primary" onclick="openPointsModal('${student.id}', 'award')">Add</button>
+            <button class="btn btn-danger" onclick="openPointsModal('${student.id}', 'deduct')">Deduct</button>
+            <button class="btn btn-secondary" onclick="openEditStudentModal('${student.id}')">Edit</button>
+          </div>
+        `;
+        studentsList.appendChild(item);
+      });
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showNotification('Name copied to clipboard!', 'success');
+      });
+    }
+
+    function toggleStudentSelection(studentId, element) {
+      event.stopPropagation();
+      if (selectedStudents.has(studentId)) {
+        selectedStudents.delete(studentId);
+        element.classList.remove('selected');
+      } else {
+        selectedStudents.add(studentId);
+        element.classList.add('selected');
+      }
+      updateBulkActions();
+    }
+
+    function updateBulkActions() {
+      const bulkActions = document.getElementById('bulkActions');
+      const selectedCount = document.getElementById('selectedCount');
+      bulkActions.classList.toggle('active', selectedStudents.size > 0);
+      selectedCount.textContent = `${selectedStudents.size} student${selectedStudents.size !== 1 ? 's' : ''} selected`;
+    }
+
+    function clearSelection() {
+      selectedStudents.clear();
+      renderContent();
+    }
+
+    function renderRewards() {
+      const contentArea = document.getElementById('contentArea');
+      if (!currentClassId) {
+        contentArea.innerHTML = '<p>Please select a class to view rewards.</p>';
+        return;
+      }
+      contentArea.innerHTML = `
+        <div class="content-header">
+          <h2>Rewards</h2>
+          <div class="view-toggle">
+            <button class="view-option ${currentRewardView === 'rewards' ? 'active' : ''}" data-view="rewards" onclick="switchRewardView('rewards')">Rewards</button>
+            <button class="view-option ${currentRewardView === 'powerups' ? 'active' : ''}" data-view="powerups" onclick="switchRewardView('powerups')">Power Ups</button>
+          </div>
+        </div>
+        <div class="rewards-grid" id="rewardsGrid"></div>
+        <button class="btn btn-primary" onclick="openModal('createRewardModal')">Create Reward</button>
+        <button class="btn btn-primary" onclick="openModal('createPowerupModal')">Create Power Up</button>
+      `;
+      if (currentRewardView === 'rewards') {
+        renderRewardsGrid();
+      } else {
+        renderPowerupsGrid();
+      }
+      if (users[currentUser].type === 'teacher') {
+        document.querySelectorAll('.btn-primary').forEach(btn => btn.style.display = 'inline-flex');
+      } else {
+        document.querySelectorAll('.btn-primary').forEach(btn => btn.style.display = 'none');
+      }
+    }
+
+    function switchRewardView(view) {
+      currentRewardView = view;
+      document.querySelectorAll('.view-option').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.view-option[data-view="${view}"]`).classList.add('active');
+      renderRewards();
+    }
+
+    function renderRewardsGrid() {
+      const rewardsGrid = document.getElementById('rewardsGrid');
+      rewardsGrid.innerHTML = '';
+      const classRewards = Object.values(rewards).filter(r => r.classId === currentClassId);
+      classRewards.forEach(reward => {
+        const card = document.createElement('div');
+        card.className = `reward-card ${reward.type}-reward`;
+        card.innerHTML = `
+          <div class="reward-type-badge ${reward.type}-badge">${reward.type === 'points' ? 'Points' : 'Instant'}</div>
+          <div class="reward-header">
+            <div>
+              <h3 class="reward-title">${reward.icon || '🎁'} ${sanitizeHTML(reward.title)}</h3>
+              ${reward.type === 'points' ? `<span class="reward-points">${reward.points} pts</span>` : ''}
+            </div>
+          </div>
+          <p class="reward-description">${sanitizeHTML(reward.description)}</p>
+          <div class="reward-actions">
+            ${reward.type === 'points' ? `<button class="btn btn-primary" onclick="openClaimRewardModal('${reward.id}')">Claim</button>` : 
+              `<button class="btn btn-primary" onclick="openInstantRewardModal('${reward.id}')">Give</button>`}
+            <button class="btn btn-secondary" onclick="openEditRewardModal('${reward.id}')">Edit</button>
+          </div>
+        `;
+        rewardsGrid.appendChild(card);
+      });
+    }
+
+    function renderPowerupsGrid() {
+      const rewardsGrid = document.getElementById('rewardsGrid');
+      rewardsGrid.innerHTML = '';
+      const classPowerups = Object.values(powerups).filter(p => p.classId === currentClassId);
+      classPowerups.forEach(powerup => {
+        const card = document.createElement('div');
+        card.className = 'powerup-card';
+        card.innerHTML = `
+          <div class="powerup-header">
+            <h3 class="powerup-title">${sanitizeHTML(powerup.name)}</h3>
+          </div>
+          <p class="powerup-description">${sanitizeHTML(powerup.description)}</p>
+          <p class="powerup-details">Multiplier: ${powerup.multiplier}x | Duration: ${powerup.duration} days</p>
+          <div class="reward-actions">
+            <button class="btn btn-primary" onclick="assignPowerup('${powerup.id}')">Assign</button>
+            <button class="btn btn-secondary" onclick="openEditPowerupModal('${powerup.id}')">Edit</button>
+          </div>
+        `;
+        rewardsGrid.appendChild(card);
+      });
+    }
+
+    function renderLeaderboard() {
+      const contentArea = document.getElementById('contentArea');
+      if (!currentClassId) {
+        contentArea.innerHTML = '<p>Please select a class to view the leaderboard.</p>';
+        return;
+      }
+      contentArea.innerHTML = `
+        <div class="content-header">
+          <h2>Leaderboard</h2>
+        </div>
+        <div id="leaderboard"></div>
+      `;
+      const leaderboard = document.getElementById('leaderboard');
+      const classStudents = Object.values(students)
+        .filter(s => s.classId === currentClassId)
+        .sort((a, b) => b.points - a.points);
+      classStudents.forEach((student, index) => {
+        const rankClass = `rank-${index + 1}`;
+        const item = document.createElement('div');
+        item.className = 'leaderboard-item';
+        item.innerHTML = `
+          <div class="leaderboard-rank ${rankClass}">${index + 1}</div>
+          <div class="leaderboard-avatar">${student.photo ? `<img src="${student.photo}">` : student.name[0].toUpperCase()}</div>
+          <div class="leaderboard-name">${sanitizeHTML(student.name)}</div>
+          <div class="leaderboard-points">${student.points} pts</div>
+        `;
+        leaderboard.appendChild(item);
+      });
+    }
+
+    function renderHistory() {
+      const contentArea = document.getElementById('contentArea');
+      if (!currentClassId) {
+        contentArea.innerHTML = '<p>Please select a class to view history.</p>';
+        return;
+      }
+      contentArea.innerHTML = `
+        <div class="content-header">
+          <h2>History</h2>
+        </div>
+        <table class="students-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Action</th>
+              <th>Points</th>
+              <th>Reason</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="historyTable"></tbody>
+        </table>
+      `;
+      const historyTable = document.getElementById('historyTable');
+      const classHistory = Object.values(history).filter(h => h.classId === currentClassId);
+      classHistory.sort((a, b) => b.date - a.date).forEach(record => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${sanitizeHTML(students[record.studentId]?.name || 'Unknown')}</td>
+          <td>${record.type}</td>
+          <td>${record.points}</td>
+          <td>${sanitizeHTML(record.reason)}</td>
+          <td>${new Date(record.date).toLocaleString()}</td>
+        `;
+        historyTable.appendChild(row);
+      });
+    }
+
+    function renderExtras() {
+      const contentArea = document.getElementById('contentArea');
+      if (!currentClassId) {
+        contentArea.innerHTML = '<p>Please select a class to view extras.</p>';
+        return;
+      }
+      contentArea.innerHTML = `
+        <div class="content-header">
+          <h2>Extras</h2>
+          <button class="btn btn-primary" onclick="openModal('addExtraModal')">Add Extra</button>
+        </div>
+        <div class="extras-list" id="extrasList"></div>
+        <div id="embedContainer"></div>
+      `;
+      const extrasList = document.getElementById('extrasList');
+      const classExtras = Object.values(extras).filter(e => e.classId === currentClassId);
+      classExtras.forEach(extra => {
+        const item = document.createElement('div');
+        item.className = 'extra-item';
+        item.textContent = extra.name;
+        item.onclick = () => loadExtra(extra.url);
+        extrasList.appendChild(item);
+      });
+      if (users[currentUser].type === 'teacher') {
+        document.querySelector('.btn-primary').style.display = 'inline-flex';
+      } else {
+        document.querySelector('.btn-primary').style.display = 'none';
+      }
+    }
+
+    function loadExtra(url) {
+      const embedContainer = document.getElementById('embedContainer');
+      embedContainer.innerHTML = `
+        <iframe src="${sanitizeHTML(url)}" style="width: 100%; height: 100%; border: none;"></iframe>
+        <button class="btn btn-primary" onclick="toggleFullscreen()" style="position: absolute; top: 10px; right: 10px;">Toggle Fullscreen</button>
+      `;
+    }
+
+    function toggleFullscreen() {
+      const embedContainer = document.getElementById('embedContainer');
+      embedContainer.classList.toggle('fullscreen');
+    }
+
+    function renderSettings() {
+      const contentArea = document.getElementById('contentArea');
+      contentArea.innerHTML = `
+        <div class="content-header">
+          <h2>Settings</h2>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newPassword">New Password</label>
+          <input class="form-input" id="newPassword" type="password">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">Confirm Password</label>
+          <input class="form-input" id="confirmPassword" type="password">
+        </div>
+        <button class="btn btn-primary" onclick="updatePassword()">Update Password</button>
+        ${users[currentUser].type === 'admin' ? `
+          <div class="form-group">
+            <label class="form-label" for="schoolNameSetting">School Name</label>
+            <input class="form-input" id="schoolNameSetting" type="text" value="${sanitizeHTML(schools[users[currentUser].school]?.name || '')}">
+          </div>
+          <button class="btn btn-primary" onclick="updateSchoolName()">Update School Name</button>
+          <button class="btn btn-primary" onclick="openModal('editLogoModal')">Edit Logo & Favicon</button>
+        ` : ''}
+      `;
+    }
+
+    function updatePassword() {
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      if (newPassword !== confirmPassword) {
+        showNotification('Passwords do not match', 'error');
+        return;
+      }
+      if (!newPassword) {
+        showNotification('Please enter a new password', 'error');
+        return;
+      }
+      users[currentUser].password = newPassword;
+      saveData();
+      showNotification('Password updated successfully', 'success');
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+    }
+
+    function updateSchoolName() {
+      const schoolName = document.getElementById('schoolNameSetting').value.trim();
+      if (!schoolName) {
+        showNotification('Please enter a school name', 'error');
+        return;
+      }
+      schools[users[currentUser].school].name = schoolName;
+      saveData();
+      showNotification('School name updated successfully', 'success');
+    }
+
+    function updateLogo() {
+      const logoUrl = document.getElementById('logoUrl').value.trim();
+      const faviconUrl = document.getElementById('faviconUrl').value.trim();
+      if (logoUrl) {
+        document.querySelector('.sidebar-logo img').src = logoUrl;
+      }
+      if (faviconUrl) {
+        document.querySelector('link[rel="icon"]').href = faviconUrl;
+      }
+      saveData();
+      showNotification('Logo and favicon updated successfully', 'success');
+      closeModal('editLogoModal');
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+      if (modalId === 'createRewardModal' || modalId === 'editRewardModal') {
+        selectRewardType(selectedRewardType, modalId === 'createRewardModal' ? 'create' : 'edit');
+      }
+      if (modalId === 'createClassModal') {
+        document.getElementById('className').value = '';
+        document.getElementById('teacherUsername').value = '';
+        document.getElementById('teacherPassword').value = '';
+      }
+      if (modalId === 'addTeacherToClassModal') {
+        document.getElementById('addTeacherUsername').value = '';
+        document.getElementById('addTeacherPassword').value = '';
+      }
+      if (modalId === 'createAdminModal') {
+        document.getElementById('adminUsername').value = '';
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('schoolName').value = '';
+      }
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+      document.querySelectorAll('.form-input').forEach(input => input.value = '');
+      document.querySelectorAll('.error-message').forEach(error => {
+        error.style.display = 'none';
+        error.textContent = '';
+      });
+      document.getElementById('photoPreview').style.display = 'none';
+      document.getElementById('editPhotoPreview').style.display = 'none';
+    }
+
+    function createClassAndTeacher() {
+      const className = document.getElementById('className').value.trim();
+      const teacherUsername = document.getElementById('teacherUsername').value.trim();
+      const teacherPassword = document.getElementById('teacherPassword').value;
+      if (!className || !teacherUsername || !teacherPassword) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+      }
+      if (users[teacherUsername]) {
+        showNotification('Teacher username already exists', 'error');
+        return;
+      }
+      const classId = generateId();
+      userData[currentUser].classes.push({ id: classId, name: className, teacher: teacherUsername });
+      users[teacherUsername] = { password: teacherPassword, type: 'teacher', school: users[currentUser].school };
+      userData[teacherUsername] = { classes: [{ id: classId, name: className, teacher: teacherUsername }], students: {}, history: {}, rewards: {}, powerups: {}, extras: {} };
+      schools[users[currentUser].school].teachers.push(teacherUsername);
+      saveData();
+      updateClassSelector();
+      closeModal('createClassModal');
+      showNotification('Class and teacher created successfully', 'success');
+      renderDashboard();
+    }
+
+    function addTeacherToClass() {
       const username = document.getElementById('addTeacherUsername').value.trim();
       const password = document.getElementById('addTeacherPassword').value;
       if (!username || (!users[username] && !password)) {

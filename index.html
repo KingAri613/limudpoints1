@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -837,7 +836,11 @@
       border-left: 4px solid var(--info-color);
     }
 
-    .reward-card.points-reward {
+    .reward-card.deduct-reward {
+      border-left: 4px solid var(--danger-color);
+    }
+
+    .reward-card.require-reward {
       border-left: 4px solid var(--success-color);
     }
 
@@ -857,7 +860,12 @@
       color: var(--info-color);
     }
 
-    .points-badge {
+    .deduct-badge {
+      background: rgb(220 38 38 / 0.1);
+      color: var(--danger-color);
+    }
+
+    .require-badge {
       background: rgb(5 150 105 / 0.1);
       color: var(--success-color);
     }
@@ -1214,6 +1222,39 @@
       color: var(--text-secondary);
       font-size: 0.875rem;
       margin-top: 0.25rem;
+    }
+
+    /* Multi Select Styles */
+    .multi-select-container {
+      position: relative;
+    }
+
+    .multi-select-search {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+
+    .multi-select-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+
+    .multi-select-option {
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+
+    .multi-select-option:hover {
+      background: var(--surface-secondary);
+    }
+
+    .multi-select-option.selected {
+      background: rgb(26 181 244 / 0.1);
     }
 
     /* Mobile Responsiveness */
@@ -1923,8 +1964,9 @@
         <button class="modal-close" onclick="closeModal('createRewardModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="reward-type-toggle">
-          <button class="reward-type-option active" data-type="points" onclick="selectRewardType('points')">Points-Based</button>
+        <div class="reward-type-toggle" style="grid-template-columns: repeat(3, 1fr);">
+          <button class="reward-type-option active" data-type="deduct" onclick="selectRewardType('deduct')">Deduct Points</button>
+          <button class="reward-type-option" data-type="require" onclick="selectRewardType('require')">Require Points</button>
           <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant')">Instant</button>
         </div>
         <div class="form-group">
@@ -1940,8 +1982,20 @@
           <input type="number" class="form-input" id="rewardPoints" min="1" placeholder="Enter points required"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="rewardIcon">Icon (optional, emoji)</label>
-          <input type="text" class="form-input" id="rewardIcon" placeholder="e.g., 🎁"/>
+          <label class="form-label" for="rewardIcon">Icon (optional)</label>
+          <select class="form-input" id="rewardIcon">
+            <option value="">No Icon</option>
+            <option value="🎁">🎁 Gift</option>
+            <option value="🏆">🏆 Trophy</option>
+            <option value="⭐">⭐ Star</option>
+            <option value="🍬">🍬 Candy</option>
+            <option value="📚">📚 Book</option>
+            <option value="🎉">🎉 Party</option>
+            <option value="🚀">🚀 Rocket</option>
+            <option value="🌟">🌟 Sparkle</option>
+            <option value="🍎">🍎 Apple</option>
+            <option value="🔔">🔔 Bell</option>
+          </select>
         </div>
       </div>
       <div class="modal-footer">
@@ -1959,8 +2013,9 @@
         <button class="modal-close" onclick="closeModal('editRewardModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="reward-type-toggle">
-          <button class="reward-type-option" data-type="points" onclick="selectRewardType('points', 'edit')">Points-Based</button>
+        <div class="reward-type-toggle" style="grid-template-columns: repeat(3, 1fr);">
+          <button class="reward-type-option" data-type="deduct" onclick="selectRewardType('deduct', 'edit')">Deduct Points</button>
+          <button class="reward-type-option" data-type="require" onclick="selectRewardType('require', 'edit')">Require Points</button>
           <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant', 'edit')">Instant</button>
         </div>
         <div class="form-group">
@@ -1976,8 +2031,20 @@
           <input type="number" class="form-input" id="editRewardPoints" min="1" placeholder="Enter points required"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="editRewardIcon">Icon (optional, emoji)</label>
-          <input type="text" class="form-input" id="editRewardIcon" placeholder="e.g., 🎁"/>
+          <label class="form-label" for="editRewardIcon">Icon (optional)</label>
+          <select class="form-input" id="editRewardIcon">
+            <option value="">No Icon</option>
+            <option value="🎁">🎁 Gift</option>
+            <option value="🏆">🏆 Trophy</option>
+            <option value="⭐">⭐ Star</option>
+            <option value="🍬">🍬 Candy</option>
+            <option value="📚">📚 Book</option>
+            <option value="🎉">🎉 Party</option>
+            <option value="🚀">🚀 Rocket</option>
+            <option value="🌟">🌟 Sparkle</option>
+            <option value="🍎">🍎 Apple</option>
+            <option value="🔔">🔔 Bell</option>
+          </select>
         </div>
       </div>
       <div class="modal-footer">
@@ -2109,7 +2176,7 @@
     let selectedStudents = new Set();
     let bulkMode = false;
     let bulkAction = 'add';
-    let selectedRewardType = 'points';
+    let selectedRewardType = 'deduct';
     let demoMode = false;
 
     function generateId() {
@@ -2268,19 +2335,24 @@
         renderAdminViews();
       }
       setupNavItems();
-      addAutomaticEmbed();
+      addAutomaticEmbeds();
     }
 
-    function addAutomaticEmbed() {
+    function addAutomaticEmbeds() {
       if (!embeds[currentUser.school]) embeds[currentUser.school] = [];
-      if (!embeds[currentUser.school].some(e => e.url === 'https://wheelofnames.com/')) {
-        embeds[currentUser.school].push({
-          id: generateId(),
-          name: 'Wheel of Names',
-          url: 'https://wheelofnames.com/'
-        });
-        saveData();
-      }
+      const embedsToAdd = [
+        {name: 'Wheel of Names', url: 'https://wheelofnames.com/'},
+        {name: 'Online Notepad', url: 'https://www.onlinenotepad.io/'}
+      ];
+      embedsToAdd.forEach(embed => {
+        if (!embeds[currentUser.school].some(e => e.url === embed.url)) {
+          embeds[currentUser.school].push({
+            id: generateId(),
+            ...embed
+          });
+        }
+      });
+      saveData();
     }
 
     function renderAdminViews() {
@@ -2845,7 +2917,7 @@
       document.querySelector(`#${prefix}RewardModal [data-type="${type}"]`).classList.add('active');
       
       const pointsGroup = document.getElementById(`${prefix}RewardPointsGroup`);
-      pointsGroup.style.display = type === 'points' ? 'block' : 'none';
+      pointsGroup.style.display = type === 'instant' ? 'none' : 'block';
     }
 
     function openCreateRewardModal() {
@@ -2853,22 +2925,22 @@
       document.getElementById('rewardDescription').value = '';
       document.getElementById('rewardPoints').value = '';
       document.getElementById('rewardIcon').value = '';
-      selectRewardType('points');
+      selectRewardType('deduct');
       openModal('createRewardModal');
     }
 
     function createReward() {
       const title = document.getElementById('rewardTitle').value.trim();
       const description = document.getElementById('rewardDescription').value.trim();
-      const pointsRequired = selectedRewardType === 'points' ? parseInt(document.getElementById('rewardPoints').value) : 0;
-      const icon = document.getElementById('rewardIcon').value.trim();
+      const pointsRequired = selectedRewardType !== 'instant' ? parseInt(document.getElementById('rewardPoints').value) : 0;
+      const icon = document.getElementById('rewardIcon').value;
       
       if (!title) {
         showNotification('Please enter a reward title', 'error');
         return;
       }
       
-      if (selectedRewardType === 'points' && (!pointsRequired || pointsRequired < 1)) {
+      if (selectedRewardType !== 'instant' && (!pointsRequired || pointsRequired < 1)) {
         showNotification('Please enter valid points required', 'error');
         return;
       }
@@ -2900,7 +2972,7 @@
       document.getElementById('editRewardDescription').value = reward.description || '';
       document.getElementById('editRewardIcon').value = reward.icon || '';
       selectRewardType(reward.type, 'edit');
-      if (reward.type === 'points') {
+      if (reward.type !== 'instant') {
         document.getElementById('editRewardPoints').value = reward.pointsRequired;
       }
       openModal('editRewardModal');
@@ -2909,13 +2981,13 @@
     function updateReward() {
       const title = document.getElementById('editRewardTitle').value.trim();
       const description = document.getElementById('editRewardDescription').value.trim();
-      const pointsRequired = selectedRewardType === 'points' ? parseInt(document.getElementById('editRewardPoints').value) : 0;
-      const icon = document.getElementById('editRewardIcon').value.trim();
+      const pointsRequired = selectedRewardType !== 'instant' ? parseInt(document.getElementById('editRewardPoints').value) : 0;
+      const icon = document.getElementById('editRewardIcon').value;
       if (!title) {
         showNotification('Please enter a reward title', 'error');
         return;
       }
-      if (selectedRewardType === 'points' && (!pointsRequired || pointsRequired < 1)) {
+      if (selectedRewardType !== 'instant' && (!pointsRequired || pointsRequired < 1)) {
         showNotification('Please enter valid points required', 'error');
         return;
       }
@@ -2947,21 +3019,36 @@
       const rewardsGrid = document.getElementById('rewardsGrid');
       const classRewards = Object.values(rewards[currentClassId]);
       rewardsGrid.innerHTML = classRewards.map(reward => {
-        const isInstant = reward.type === 'instant';
+        let className = '';
+        let badgeClass = '';
+        let badgeText = '';
+        if (reward.type === 'instant') {
+          className = 'instant-reward';
+          badgeClass = 'instant-badge';
+          badgeText = 'Instant';
+        } else if (reward.type === 'deduct') {
+          className = 'deduct-reward';
+          badgeClass = 'deduct-badge';
+          badgeText = 'Deduct';
+        } else if (reward.type === 'require') {
+          className = 'require-reward';
+          badgeClass = 'require-badge';
+          badgeText = 'Require';
+        }
         return `
-          <div class="reward-card ${isInstant ? 'instant-reward' : 'points-reward'}">
-            <div class="reward-type-badge ${isInstant ? 'instant-badge' : 'points-badge'}">
-              ${isInstant ? 'Instant' : 'Points'}
+          <div class="reward-card ${className}">
+            <div class="reward-type-badge ${badgeClass}">
+              ${badgeText}
             </div>
             <div class="reward-header">
               <div>
-                <h3 class="reward-title">${sanitizeHTML(reward.title)}</h3>
+                <h3 class="reward-title">${reward.icon ? reward.icon + ' ' : ''}${sanitizeHTML(reward.title)}</h3>
                 ${reward.description ? `<p class="reward-description">${sanitizeHTML(reward.description)}</p>` : ''}
               </div>
-              ${!isInstant ? `<span class="reward-points">${reward.pointsRequired} pts</span>` : ''}
+              ${reward.type !== 'instant' ? `<span class="reward-points">${reward.pointsRequired} pts</span>` : ''}
             </div>
             <div class="reward-actions">
-              <button class="btn btn-primary" onclick="openClaimRewardModal('${reward.id}')">Claim for Student</button>
+              <button class="btn btn-primary" onclick="openClaimRewardModal('${reward.id}')">Claim for Students</button>
               <button class="btn btn-secondary" onclick="openEditRewardModal('${reward.id}')">Edit</button>
             </div>
           </div>
@@ -2975,12 +3062,13 @@
       if (!reward) return;
       const content = document.getElementById('claimRewardContent');
       content.innerHTML = `
-        <h3>${sanitizeHTML(reward.title)}</h3>
+        <h3>${reward.icon ? reward.icon + ' ' : ''}${sanitizeHTML(reward.title)}</h3>
         ${reward.description ? `<p>${sanitizeHTML(reward.description)}</p>` : ''}
-        ${reward.type === 'points' ? `<p>Requires ${reward.pointsRequired} points</p>` : ''}
+        ${reward.type !== 'instant' ? `<p>Requires ${reward.pointsRequired} points</p>` : ''}
         <div class="form-group">
-          <label class="form-label" for="claimStudent">Select Student</label>
-          <select class="form-input" id="claimStudent">
+          <label class="form-label">Select Students</label>
+          <button class="btn btn-secondary" onclick="selectAllStudentsForClaim()">Select All</button>
+          <select multiple class="form-input" id="claimStudents" style="height: 200px;">
             ${Object.values(students[currentClassId]).map(student => `
               <option value="${student.id}">${sanitizeHTML(student.name)} (${student.points} pts)</option>
             `).join('')}
@@ -2990,44 +3078,66 @@
       openModal('claimRewardModal');
     }
 
+    function selectAllStudentsForClaim() {
+      const select = document.getElementById('claimStudents');
+      Array.from(select.options).forEach(option => option.selected = true);
+    }
+
     function confirmClaimReward() {
-      const studentId = document.getElementById('claimStudent').value;
+      const selectedOptions = Array.from(document.getElementById('claimStudents').selectedOptions);
+      const studentIds = selectedOptions.map(opt => opt.value);
       const reward = rewards[currentClassId][currentRewardId];
-      const student = students[currentClassId][studentId];
-      if (!reward || !student) return;
-      if (reward.type === 'points') {
-        if (student.points < reward.pointsRequired) {
-          showNotification('Student does not have enough points', 'error');
-          return;
+      if (!reward || studentIds.length === 0) return;
+      let successCount = 0;
+      studentIds.forEach(studentId => {
+        const student = students[currentClassId][studentId];
+        if (reward.type !== 'instant') {
+          if (student.points < reward.pointsRequired) {
+            return; // Skip if not enough points
+          }
         }
-        student.points -= reward.pointsRequired;
-        student.pointsRewards = (student.pointsRewards || 0) + 1;
-        history[currentClassId].push({
-          id: generateId(),
-          type: 'reward_claim',
-          studentId: studentId,
-          rewardId: currentRewardId,
-          points: -reward.pointsRequired,
-          reason: `Claimed reward: ${reward.title}`,
-          timestamp: new Date().toISOString()
-        });
-      } else {
-        student.instantRewards = (student.instantRewards || 0) + 1;
-        history[currentClassId].push({
-          id: generateId(),
-          type: 'instant_reward',
-          studentId: studentId,
-          rewardId: currentRewardId,
-          reason: `Received instant reward: ${reward.title}`,
-          timestamp: new Date().toISOString()
-        });
-      }
+        if (reward.type === 'deduct') {
+          student.points -= reward.pointsRequired;
+          student.pointsRewards = (student.pointsRewards || 0) + 1;
+          history[currentClassId].push({
+            id: generateId(),
+            type: 'reward_claim',
+            studentId: studentId,
+            rewardId: currentRewardId,
+            points: -reward.pointsRequired,
+            reason: `Claimed reward: ${reward.title}`,
+            timestamp: new Date().toISOString()
+          });
+        } else if (reward.type === 'require') {
+          student.pointsRewards = (student.pointsRewards || 0) + 1;
+          history[currentClassId].push({
+            id: generateId(),
+            type: 'reward_claim',
+            studentId: studentId,
+            rewardId: currentRewardId,
+            points: 0,
+            reason: `Claimed reward: ${reward.title} (required points)`,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          student.instantRewards = (student.instantRewards || 0) + 1;
+          history[currentClassId].push({
+            id: generateId(),
+            type: 'instant_reward',
+            studentId: studentId,
+            rewardId: currentRewardId,
+            reason: `Received instant reward: ${reward.title}`,
+            timestamp: new Date().toISOString()
+          });
+        }
+        successCount++;
+      });
       saveData();
       renderStudentsView();
       renderLeaderboard();
       renderHistoryView();
       closeModal('claimRewardModal');
-      showNotification('Reward claimed successfully!', 'success');
+      showNotification(`${successCount} rewards claimed successfully!`, 'success');
     }
 
     // Power Up management
@@ -3137,8 +3247,8 @@
         <p>${powerup.multiplier}x points for ${powerup.duration} days</p>
         <div class="form-group">
           <label class="form-label">Select Students</label>
-          <button class="btn btn-secondary" onclick="selectAllStudents()">Select All</button>
-          <select multiple class="form-input" id="assignStudents" style="height: 200px;">
+          <button class="btn btn-secondary" onclick="selectAllStudentsForClaim()">Select All</button>
+          <select multiple class="form-input" id="claimStudents" style="height: 200px;">
             ${Object.values(students[currentClassId]).map(student => `
               <option value="${student.id}">${sanitizeHTML(student.name)}</option>
             `).join('')}
@@ -3150,13 +3260,8 @@
       openModal('claimRewardModal');
     }
 
-    function selectAllStudents() {
-      const select = document.getElementById('assignStudents');
-      Array.from(select.options).forEach(option => option.selected = true);
-    }
-
     function confirmAssignPowerUp() {
-      const selectedOptions = Array.from(document.getElementById('assignStudents').selectedOptions);
+      const selectedOptions = Array.from(document.getElementById('claimStudents').selectedOptions);
       const studentIds = selectedOptions.map(opt => opt.value);
       const powerup = powerups[currentClassId][currentPowerUpId];
       if (!powerup || studentIds.length === 0) return;
@@ -3214,7 +3319,7 @@
           if (entry.multiplier > 1) actionText += ` (x${entry.multiplier})`;
         } else if (entry.type === 'reward_claim') {
           const reward = rewards[currentClassId][entry.rewardId];
-          actionText = `Claimed ${reward ? reward.title : 'reward'} (-${Math.abs(entry.points)} pts)`;
+          actionText = `Claimed ${reward ? reward.title : 'reward'} (${entry.points ? -Math.abs(entry.points) + ' pts' : 'no deduct'})`;
         } else if (entry.type === 'instant_reward') {
           const reward = rewards[currentClassId][entry.rewardId];
           actionText = `Received ${reward ? reward.title : 'instant reward'}`;
@@ -3716,7 +3821,7 @@
       history['demo1'] = [];
       powerups['demo1'] = {};
       reasons['demo1'] = [];
-      embeds['Demo School'] = [{ id: 'e1', name: 'Wheel of Names', url: 'https://wheelofnames.com/' }];
+      embeds['Demo School'] = [{ id: 'e1', name: 'Wheel of Names', url: 'https://wheelofnames.com/' }, { id: 'e2', name: 'Online Notepad', url: 'https://www.onlinenotepad.io/' }];
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appLayout').classList.add('active');
       initializeApp();
@@ -3744,4 +3849,3 @@
   </script>
 </body>
 </html>
-```

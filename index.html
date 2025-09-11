@@ -407,7 +407,7 @@
     }
 
     .sidebar-toggle {
-      display: none;
+      display: block;
       font-size: 1.5rem;
       cursor: pointer;
       padding: 0.5rem;
@@ -574,6 +574,12 @@
       gap: 0.75rem;
     }
 
+    .students-compact {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
     .student-list-item {
       display: flex;
       align-items: center;
@@ -738,6 +744,88 @@
       font-size: 2rem;
       color: var(--text-secondary);
       margin-bottom: 0.5rem;
+    }
+
+    /* Compact View Styles */
+    .compact-student-item {
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .compact-student-item:hover {
+      box-shadow: var(--shadow);
+    }
+
+    .compact-student-item.selected {
+      border-color: var(--primary-color);
+      background: rgb(26 181 244 / 0.05);
+    }
+
+    .compact-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      color: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .compact-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .compact-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .compact-name {
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .compact-points {
+      font-weight: 600;
+      color: var(--primary-color);
+      white-space: nowrap;
+    }
+
+    /* Reason Chip Styles */
+    .reason-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgb(26 181 244 / 0.1);
+      color: var(--primary-color);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      border: 1px solid rgb(26 181 244 / 0.2);
+    }
+
+    .reason-chip button {
+      background: transparent;
+      border: none;
+      color: var(--primary-color);
+      cursor: pointer;
+      font-size: 1rem;
     }
 
     /* Class Detail View */
@@ -1277,7 +1365,7 @@
         width: 100%;
       }
      
-      .hamburger-menu, .sidebar-toggle {
+      .hamburger-menu {
         display: block;
       }
      
@@ -1334,10 +1422,6 @@
 
     /* Tablet Responsiveness */
     @media (max-width: 1024px) and (min-width: 769px) {
-      .sidebar-toggle {
-        display: block;
-      }
-
       .sidebar.collapsed {
         transform: translateX(-100%);
       }
@@ -1501,6 +1585,7 @@
             <div class="view-toggle">
               <button class="view-option active" data-view="grid" onclick="switchStudentView(event, 'grid')">Grid View</button>
               <button class="view-option" data-view="list" onclick="switchStudentView(event, 'list')">List View</button>
+              <button class="view-option" data-view="compact" onclick="switchStudentView(event, 'compact')">Compact View</button>
             </div>
             <div class="grid-columns-selector">
               <label>Columns:</label>
@@ -1528,6 +1613,8 @@
           </div>
 
           <div class="students-list" id="studentsList"></div>
+
+          <div class="students-compact" id="studentsCompact"></div>
         </div>
 
         <!-- Leaderboard View -->
@@ -1791,17 +1878,141 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="embedName">Embed Name</label>
-          <input type="text" class="form-input" id="embedName" placeholder="Enter embed name"/>
+          <label class="form-label" for="embedName">Name</label>
+          <input type="text" class="form-input" id="embedName" placeholder="Embed name"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="embedUrl">Embed URL</label>
-          <input type="text" class="form-input" id="embedUrl" placeholder="Enter embed URL"/>
+          <label class="form-label" for="embedUrl">URL</label>
+          <input type="text" class="form-input" id="embedUrl" placeholder="Embed URL"/>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('addEmbedModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="addEmbed()">Add Embed</button>
+        <button class="btn btn-primary" onclick="addEmbed()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Student Modal -->
+  <div class="modal" id="addStudentModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Student</h2>
+        <button class="modal-close" onclick="closeModal('addStudentModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="studentName">Student Name</label>
+          <input type="text" class="form-input" id="studentName" placeholder="Enter student name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="initialPoints">Initial Points</label>
+          <input type="number" class="form-input" id="initialPoints" value="0" min="0"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="studentPhoto">Photo</label>
+          <input type="file" class="form-input" id="studentPhoto" accept="image/*" onchange="previewPhoto(event, 'photoPreview')"/>
+          <div id="photoPreview" style="display: none; margin-top: 1rem;">
+            <img src="" alt="Preview" style="max-width: 100%; border-radius: 8px;"/>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addStudentModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addStudent()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Multiple Students Modal -->
+  <div class="modal" id="addMultipleModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Multiple Students</h2>
+        <button class="modal-close" onclick="closeModal('addMultipleModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="multipleNames">Student Names (one per line)</label>
+          <textarea class="form-input" id="multipleNames" rows="5" placeholder="Student 1\nStudent 2\n..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addMultipleModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addMultipleStudents()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Student Modal -->
+  <div class="modal" id="editStudentModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Student</h2>
+        <button class="modal-close" onclick="closeModal('editStudentModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="editStudentName">Student Name</label>
+          <input type="text" class="form-input" id="editStudentName" placeholder="Enter student name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editStudentPhoto">Change Photo</label>
+          <input type="file" class="form-input" id="editStudentPhoto" accept="image/*" onchange="previewPhoto(event, 'editPhotoPreview')"/>
+          <div id="editPhotoPreview" style="display: none; margin-top: 1rem;">
+            <img id="editPreviewImg" src="" alt="Preview" style="max-width: 100%; border-radius: 8px;"/>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="deleteStudent()">Delete</button>
+        <button class="btn btn-secondary" onclick="closeModal('editStudentModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="updateStudent()">Update</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Points Modal -->
+  <div class="modal" id="bulkPointsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="bulkModalTitle">Bulk Points</h2>
+        <button class="modal-close" onclick="closeModal('bulkPointsModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="bulkSummary"></p>
+        <div class="form-group">
+          <label class="form-label" for="bulkReason">Reason (optional)</label>
+          <input type="text" class="form-input" id="bulkReason" placeholder="Enter reason" list="reasonsList"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('bulkPointsModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmBulkPoints()">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Points Modal -->
+  <div class="modal" id="studentPointsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="studentModalTitle">Add/Subtract Points</h2>
+        <button class="modal-close" onclick="closeModal('studentPointsModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="pointsChange">Points Amount</label>
+          <input type="number" class="form-input" id="pointsChange" value="1" min="1"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pointsReason">Reason (optional)</label>
+          <input type="text" class="form-input" id="pointsReason" placeholder="Enter reason" list="reasonsList"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('studentPointsModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="updateStudentPoints()">Apply</button>
       </div>
     </div>
   </div>
@@ -1815,25 +2026,25 @@
       </div>
       <div class="modal-body">
         <div class="reward-type-toggle">
-          <button class="reward-type-option active" data-type="deduct" onclick="selectRewardType('deduct')">Deduct</button>
-          <button class="reward-type-option" data-type="require" onclick="selectRewardType('require')">Require</button>
-          <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant')">Instant</button>
+          <button class="reward-type-option active" data-type="deduct" onclick="selectRewardType('deduct')">Subtract Points</button>
+          <button class="reward-type-option" data-type="require" onclick="selectRewardType('require')">Require Points (No Subtract)</button>
+          <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant')">Instant Reward</button>
         </div>
         <div class="form-group">
           <label class="form-label" for="rewardTitle">Title</label>
-          <input type="text" class="form-input" id="rewardTitle" placeholder="Reward title"/>
+          <input type="text" class="form-input" id="rewardTitle" placeholder="Enter reward title"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="rewardDescription">Description</label>
-          <input type="text" class="form-input" id="rewardDescription" placeholder="Optional description"/>
+          <label class="form-label" for="rewardDescription">Description (optional)</label>
+          <textarea class="form-input" id="rewardDescription" rows="3" placeholder="Enter description"></textarea>
         </div>
         <div class="form-group" id="rewardPointsGroup">
           <label class="form-label" for="rewardPoints">Points Required</label>
-          <input type="number" class="form-input" id="rewardPoints" min="1"/>
+          <input type="number" class="form-input" id="rewardPoints" value="10" min="1"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="rewardIcon">Icon (Emoji)</label>
-          <input type="text" class="form-input" id="rewardIcon" placeholder="Optional emoji icon"/>
+          <label class="form-label" for="rewardIcon">Icon (emoji, optional)</label>
+          <input type="text" class="form-input" id="rewardIcon" placeholder="e.g., 🏆"/>
         </div>
       </div>
       <div class="modal-footer">
@@ -1852,25 +2063,25 @@
       </div>
       <div class="modal-body">
         <div class="reward-type-toggle">
-          <button class="reward-type-option" data-type="deduct" onclick="selectRewardType('deduct', 'edit')">Deduct</button>
-          <button class="reward-type-option" data-type="require" onclick="selectRewardType('require', 'edit')">Require</button>
-          <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant', 'edit')">Instant</button>
+          <button class="reward-type-option active" data-type="deduct" onclick="selectRewardType('deduct', 'edit')">Subtract Points</button>
+          <button class="reward-type-option" data-type="require" onclick="selectRewardType('require', 'edit')">Require Points (No Subtract)</button>
+          <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant', 'edit')">Instant Reward</button>
         </div>
         <div class="form-group">
           <label class="form-label" for="editRewardTitle">Title</label>
-          <input type="text" class="form-input" id="editRewardTitle" placeholder="Reward title"/>
+          <input type="text" class="form-input" id="editRewardTitle" placeholder="Enter reward title"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="editRewardDescription">Description</label>
-          <input type="text" class="form-input" id="editRewardDescription" placeholder="Optional description"/>
+          <label class="form-label" for="editRewardDescription">Description (optional)</label>
+          <textarea class="form-input" id="editRewardDescription" rows="3" placeholder="Enter description"></textarea>
         </div>
         <div class="form-group" id="editRewardPointsGroup">
           <label class="form-label" for="editRewardPoints">Points Required</label>
-          <input type="number" class="form-input" id="editRewardPoints" min="1"/>
+          <input type="number" class="form-input" id="editRewardPoints" value="10" min="1"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="editRewardIcon">Icon (Emoji)</label>
-          <input type="text" class="form-input" id="editRewardIcon" placeholder="Optional emoji icon"/>
+          <label class="form-label" for="editRewardIcon">Icon (emoji, optional)</label>
+          <input type="text" class="form-input" id="editRewardIcon" placeholder="e.g., 🏆"/>
         </div>
       </div>
       <div class="modal-footer">
@@ -1908,19 +2119,19 @@
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label" for="powerUpTitle">Title</label>
-          <input type="text" class="form-input" id="powerUpTitle" placeholder="Power Up title"/>
+          <input type="text" class="form-input" id="powerUpTitle" placeholder="Enter power up title"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="powerUpDescription">Description</label>
-          <input type="text" class="form-input" id="powerUpDescription" placeholder="Optional description"/>
+          <label class="form-label" for="powerUpDescription">Description (optional)</label>
+          <textarea class="form-input" id="powerUpDescription" rows="3" placeholder="Enter description"></textarea>
         </div>
         <div class="form-group">
           <label class="form-label" for="powerUpMultiplier">Multiplier</label>
-          <input type="number" class="form-input" id="powerUpMultiplier" step="0.1" min="1"/>
+          <input type="number" class="form-input" id="powerUpMultiplier" value="1.5" step="0.1" min="1"/>
         </div>
         <div class="form-group">
           <label class="form-label" for="powerUpDuration">Duration (days)</label>
-          <input type="number" class="form-input" id="powerUpDuration" min="1"/>
+          <input type="number" class="form-input" id="powerUpDuration" value="7" min="1"/>
         </div>
       </div>
       <div class="modal-footer">
@@ -1940,151 +2151,25 @@
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label" for="editPowerUpTitle">Title</label>
-          <input type="text" class="form-input" id="editPowerUpTitle" placeholder="Power Up title"/>
+          <input type="text" class="form-input" id="editPowerUpTitle" placeholder="Enter power up title"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="editPowerUpDescription">Description</label>
-          <input type="text" class="form-input" id="editPowerUpDescription" placeholder="Optional description"/>
+          <label class="form-label" for="editPowerUpDescription">Description (optional)</label>
+          <textarea class="form-input" id="editPowerUpDescription" rows="3" placeholder="Enter description"></textarea>
         </div>
         <div class="form-group">
           <label class="form-label" for="editPowerUpMultiplier">Multiplier</label>
-          <input type="number" class="form-input" id="editPowerUpMultiplier" step="0.1" min="1"/>
+          <input type="number" class="form-input" id="editPowerUpMultiplier" value="1.5" step="0.1" min="1"/>
         </div>
         <div class="form-group">
           <label class="form-label" for="editPowerUpDuration">Duration (days)</label>
-          <input type="number" class="form-input" id="editPowerUpDuration" min="1"/>
+          <input type="number" class="form-input" id="editPowerUpDuration" value="7" min="1"/>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-danger" onclick="deletePowerUp()">Delete</button>
         <button class="btn btn-secondary" onclick="closeModal('editPowerUpModal')">Cancel</button>
         <button class="btn btn-primary" onclick="updatePowerUp()">Update</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Student Modal -->
-  <div class="modal" id="addStudentModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Add Student</h2>
-        <button class="modal-close" onclick="closeModal('addStudentModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="studentName">Name</label>
-          <input type="text" class="form-input" id="studentName" placeholder="Student name"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="initialPoints">Initial Points</label>
-          <input type="number" class="form-input" id="initialPoints" min="0" value="0"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="studentPhoto">Photo</label>
-          <input type="file" class="file-upload" id="studentPhoto" accept="image/*" onchange="previewPhoto(event, 'photoPreview')"/>
-          <div class="upload-area" onclick="document.getElementById('studentPhoto').click()">Click or drag photo here</div>
-          <div id="photoPreview" style="display: none; text-align: center;">
-            <img src="" alt="Preview" style="max-width: 100%; max-height: 200px;"/>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('addStudentModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="addStudent()">Add</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Multiple Students Modal -->
-  <div class="modal" id="addMultipleModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Add Multiple Students</h2>
-        <button class="modal-close" onclick="closeModal('addMultipleModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="multipleNames">Student Names (one per line)</label>
-          <textarea class="form-input" id="multipleNames" rows="5" placeholder="John Doe\nJane Smith\n..."></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('addMultipleModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="addMultipleStudents()">Add</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Edit Student Modal -->
-  <div class="modal" id="editStudentModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Edit Student</h2>
-        <button class="modal-close" onclick="closeModal('editStudentModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="editStudentName">Name</label>
-          <input type="text" class="form-input" id="editStudentName" placeholder="Student name"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="editStudentPhoto">Photo</label>
-          <input type="file" class="file-upload" id="editStudentPhoto" accept="image/*" onchange="previewPhoto(event, 'editPhotoPreview')"/>
-          <div class="upload-area" onclick="document.getElementById('editStudentPhoto').click()">Click or drag photo here</div>
-          <div id="editPhotoPreview" style="display: none; text-align: center;">
-            <img id="editPreviewImg" src="" alt="Preview" style="max-width: 100%; max-height: 200px;"/>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-danger" onclick="deleteStudent()">Delete</button>
-        <button class="btn btn-secondary" onclick="closeModal('editStudentModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="updateStudent()">Update</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bulk Points Modal -->
-  <div class="modal" id="bulkPointsModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title" id="bulkModalTitle">Bulk Add Points</h2>
-        <button class="modal-close" onclick="closeModal('bulkPointsModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p id="bulkSummary"></p>
-        <div class="form-group">
-          <label class="form-label" for="bulkReason">Reason</label>
-          <input type="text" class="form-input" id="bulkReason" list="reasonsList" placeholder="Optional reason"/>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('bulkPointsModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="confirmBulkPoints()">Confirm</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Student Points Modal -->
-  <div class="modal" id="studentPointsModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title" id="studentModalTitle">Add Points</h2>
-        <button class="modal-close" onclick="closeModal('studentPointsModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="pointsChange">Points</label>
-          <input type="number" class="form-input" id="pointsChange" min="1" value="1"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="pointsReason">Reason</label>
-          <input type="text" class="form-input" id="pointsReason" list="reasonsList" placeholder="Optional reason"/>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('studentPointsModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="updateStudentPoints()">Confirm</button>
       </div>
     </div>
   </div>
@@ -2098,8 +2183,8 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="editReasonText">Reason</label>
-          <input type="text" class="form-input" id="editReasonText" placeholder="Edit reason"/>
+          <label class="form-label" for="editReasonText">Reason Text</label>
+          <input type="text" class="form-input" id="editReasonText" placeholder="Enter reason"/>
         </div>
       </div>
       <div class="modal-footer">
@@ -2110,10 +2195,13 @@
     </div>
   </div>
 
+  <!-- Datalist for Reasons -->
   <datalist id="reasonsList"></datalist>
 
+  <!-- Notification Container -->
+  <div class="notification" id="notification"></div>
+
   <script>
-    // Global variables
     let currentUser = null;
     let currentClassId = null;
     let classes = [];
@@ -2130,17 +2218,18 @@
     let currentStudentId = '';
     let currentRewardId = '';
     let currentPowerUpId = '';
-    let currentReasonIndex = '';
-    let demoMode = false;
     let selectedRewardType = 'deduct';
+    let currentView = 'grid';
+    let currentReasonIndex = -1;
     let currentTeacherUsername = '';
+    let demoMode = false;
 
     function generateId() {
-      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+      return Math.random().toString(36).substr(2, 9);
     }
 
     function sanitizeHTML(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     function saveData() {
@@ -2154,6 +2243,7 @@
       localStorage.setItem('embeds', JSON.stringify(embeds));
       localStorage.setItem('users', JSON.stringify(users));
       sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+      if (currentClassId) localStorage.setItem('currentClassId', currentClassId);
     }
 
     function loadData() {
@@ -2166,26 +2256,7 @@
       embeds = JSON.parse(localStorage.getItem('embeds') || '{}');
       users = JSON.parse(localStorage.getItem('users') || '{}');
       currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    }
-
-    function showNotification(message, type = 'info') {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.textContent = message;
-      document.body.appendChild(notification);
-      setTimeout(() => notification.classList.add('show'), 10);
-      setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
-
-    function openModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
-    }
-
-    function closeModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
+      currentClassId = localStorage.getItem('currentClassId');
     }
 
     function showLogin() {
@@ -2209,55 +2280,45 @@
       const confirmPassword = document.getElementById('signupConfirmPassword').value.trim();
       const school = document.getElementById('signupSchool').value.trim();
       const type = document.querySelector('.account-type-btn.active').dataset.type;
-
+      const error = document.getElementById('signupError');
+      const success = document.getElementById('signupSuccess');
+      error.style.display = 'none';
+      success.style.display = 'none';
       if (!username || !password || !school) {
-        document.getElementById('signupError').textContent = 'Please fill all fields';
-        document.getElementById('signupError').style.display = 'block';
+        error.textContent = 'Please fill all fields';
+        error.style.display = 'block';
         return;
       }
-
       if (password !== confirmPassword) {
-        document.getElementById('signupError').textContent = 'Passwords do not match';
-        document.getElementById('signupError').style.display = 'block';
+        error.textContent = 'Passwords do not match';
+        error.style.display = 'block';
         return;
       }
-
       if (users[username]) {
-        document.getElementById('signupError').textContent = 'Username already exists';
-        document.getElementById('signupError').style.display = 'block';
+        error.textContent = 'Username already exists';
+        error.style.display = 'block';
         return;
       }
-
-      const user = {
-        username,
-        password,
-        school,
-        type,
-        createdAt: new Date().toISOString()
-      };
-
+      const user = { username, password, school, type, createdAt: new Date().toISOString() };
       users[username] = user;
       saveData();
-
-      document.getElementById('signupSuccess').textContent = 'Account created successfully!';
-      document.getElementById('signupSuccess').style.display = 'block';
+      success.textContent = 'Account created! Please login.';
+      success.style.display = 'block';
       setTimeout(showLogin, 2000);
     }
 
     function login() {
       const username = document.getElementById('loginUsername').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
-
+      const error = document.getElementById('loginError');
+      error.style.display = 'none';
       const user = users[username];
       if (!user || user.password !== password) {
-        document.getElementById('loginError').textContent = 'Invalid username or password';
-        document.getElementById('loginError').style.display = 'block';
+        error.textContent = 'Invalid username or password';
+        error.style.display = 'block';
         return;
       }
-
       currentUser = user;
-      saveData();
-
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appLayout').classList.add('active');
       initializeApp();
@@ -2266,7 +2327,8 @@
     function logout() {
       currentUser = null;
       currentClassId = null;
-      sessionStorage.removeItem('currentUser');
+      sessionStorage.clear();
+      localStorage.removeItem('currentClassId');
       document.getElementById('appLayout').classList.remove('active');
       showLogin();
     }
@@ -2275,115 +2337,113 @@
       document.getElementById('sidebarUsername').textContent = currentUser.username;
       document.getElementById('sidebarUserAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
       document.getElementById('sidebarSchool').textContent = currentUser.school;
-      updateNavItems();
+      updateSidebarNav();
       updateClassSelector();
-      if (currentUser.type === 'admin') {
-        renderAdminView();
-      } else {
-        const userClasses = classes.filter(c => c.teacherUsername === currentUser.username);
-        if (userClasses.length > 0) {
-          currentClassId = userClasses[0].id;
-          document.getElementById('classSelector').value = currentClassId;
-          renderStudentsView();
-        }
+      if (currentClassId) {
+        renderStudentsView();
+        renderLeaderboard();
+        renderRewardsView();
+        renderHistoryView();
+        renderSettingsView();
+        renderPowerUpsView();
+        renderExtrasView();
+        updateReasonsList();
+      } else if (currentUser.type === 'personal') {
+        openNewClassModal();
       }
     }
 
-    function updateNavItems() {
-      const nav = document.getElementById('sidebar').querySelector('.sidebar-nav');
-      let navHtml = `
+    function updateSidebarNav() {
+      const nav = document.querySelector('.sidebar-nav');
+      const commonNav = `
         <div class="nav-section">
-          <div class="nav-section-title">Classes</div>
-          <div class="nav-item active" onclick="switchView('students')" data-view="students">
-            <span class="nav-icon">👥</span> Students
-          </div>
-          <div class="nav-item" onclick="switchView('leaderboard')" data-view="leaderboard">
-            <span class="nav-icon">🏆</span> Leaderboard
-          </div>
-          <div class="nav-item" onclick="switchView('rewards')" data-view="rewards">
-            <span class="nav-icon">🎁</span> Rewards
-          </div>
-          <div class="nav-item" onclick="switchView('powerups')" data-view="powerups">
-            <span class="nav-icon">⚡</span> Power Ups
-          </div>
-          <div class="nav-item" onclick="switchView('history')" data-view="history">
-            <span class="nav-icon">📜</span> History
-          </div>
-          <div class="nav-item" onclick="switchView('extras')" data-view="extras">
-            <span class="nav-icon">⭐</span> Extras
-          </div>
-        </div>
-        <div class="nav-section">
-          <div class="nav-section-title">Account</div>
-          <div class="nav-item" onclick="switchView('settings')" data-view="settings">
-            <span class="nav-icon">⚙️</span> Settings
-          </div>
+          <div class="nav-section-title">Classroom</div>
+          <a href="#" class="nav-item active" onclick="switchView(event, 'studentsView')"><span class="nav-icon">👥</span>Students</a>
+          <a href="#" class="nav-item" onclick="switchView(event, 'leaderboardView')"><span class="nav-icon">🏆</span>Leaderboard</a>
+          <a href="#" class="nav-item" onclick="switchView(event, 'rewardsView')"><span class="nav-icon">🎁</span>Rewards</a>
+          <a href="#" class="nav-item" onclick="switchView(event, 'powerupsView')"><span class="nav-icon">⚡</span>Power Ups</a>
+          <a href="#" class="nav-item" onclick="switchView(event, 'historyView')"><span class="nav-icon">📜</span>History</a>
+          <a href="#" class="nav-item" onclick="switchView(event, 'extrasView')"><span class="nav-icon">🛠️</span>Extras</a>
+          <a href="#" class="nav-item" onclick="switchView(event, 'settingsView')"><span class="nav-icon">⚙️</span>Settings</a>
         </div>
       `;
       if (currentUser.type === 'admin') {
-        navHtml = `
+        nav.innerHTML = `
           <div class="nav-section">
             <div class="nav-section-title">Admin</div>
-            <div class="nav-item active" onclick="switchView('admin-classes')" data-view="admin-classes">
-              <span class="nav-icon">🏫</span> Classes
-            </div>
-            <div class="nav-item" onclick="switchView('admin-teachers')" data-view="admin-teachers">
-              <span class="nav-icon">👨‍🏫</span> Teachers
-            </div>
-            <div class="nav-item" onclick="switchView('admin-embeds')" data-view="admin-embeds">
-              <span class="nav-icon">📺</span> Embeds
-            </div>
+            <a href="#" class="nav-item active" onclick="switchView(event, 'admin-classesView')"><span class="nav-icon">🏫</span>Classes</a>
+            <a href="#" class="nav-item" onclick="switchView(event, 'admin-teachersView')"><span class="nav-icon">👩‍🏫</span>Teachers</a>
+            <a href="#" class="nav-item" onclick="switchView(event, 'admin-embedsView')"><span class="nav-icon">🖼️</span>Embeds</a>
           </div>
         `;
+      } else {
+        nav.innerHTML = commonNav;
       }
-      nav.innerHTML = navHtml;
     }
 
-    function switchView(view) {
+    function switchView(event, viewId) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      document.querySelector(`[data-view="${view}"]`).classList.add('active');
-      document.querySelectorAll('[id$="View"]').forEach(v => v.style.display = 'none');
-      document.getElementById(`${view}View`).style.display = 'block';
-      document.getElementById('pageTitle').textContent = view.charAt(0).toUpperCase() + view.slice(1).replace('-', ' ');
-      if (view === 'students') {
-        renderStudentsView();
-      } else if (view === 'leaderboard') {
-        renderLeaderboard();
-      } else if (view === 'rewards') {
-        renderRewardsView();
-      } else if (view === 'history') {
-        renderHistoryView();
-      } else if (view === 'settings') {
-        renderSettingsView();
-      } else if (view === 'extras') {
-        renderExtrasView();
-      } else if (view === 'powerups') {
-        renderPowerUpsView();
-      } else if (view === 'admin-classes') {
-        renderAdminClassesView();
-      } else if (view === 'admin-teachers') {
-        renderAdminTeachersView();
-      } else if (view === 'admin-embeds') {
-        renderAdminEmbedsView();
-      }
+      event.target.classList.add('active');
+      document.querySelectorAll('[id$="View"]').forEach(view => view.style.display = 'none');
+      document.getElementById(viewId).style.display = 'block';
+      document.getElementById('pageTitle').textContent = event.target.textContent;
+      if (viewId === 'studentsView') renderStudentsView();
+      if (viewId === 'leaderboardView') renderLeaderboard();
+      if (viewId === 'rewardsView') renderRewardsView();
+      if (viewId === 'historyView') renderHistoryView();
+      if (viewId === 'settingsView') renderSettingsView();
+      if (viewId === 'extrasView') renderExtrasView();
+      if (viewId === 'powerupsView') renderPowerUpsView();
+      if (viewId === 'admin-classesView') renderAdminClassesView();
+      if (viewId === 'admin-teachersView') renderAdminTeachersView();
+      if (viewId === 'admin-embedsView') renderAdminEmbedsView();
     }
 
-    function renderAdminView() {
-      switchView('admin-classes');
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('mobile-open');
+    }
+
+    function toggleSidebarCollapse() {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+      document.getElementById('mainContent').classList.toggle('collapsed');
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.className = `notification ${type} show`;
+      setTimeout(() => notification.classList.remove('show'), 3000);
     }
 
     function updateClassSelector() {
       const selector = document.getElementById('classSelector');
+      selector.innerHTML = '';
       const userClasses = classes.filter(c => c.teacherUsername === currentUser.username);
-      selector.innerHTML = userClasses.map(cls => `<option value="${cls.id}">${sanitizeHTML(cls.name)}</option>`).join('');
+      userClasses.forEach(cls => {
+        const option = document.createElement('option');
+        option.value = cls.id;
+        option.textContent = cls.name;
+        selector.appendChild(option);
+      });
       selector.onchange = (e) => {
         currentClassId = e.target.value;
-        switchView(document.querySelector('.nav-item.active').dataset.view || 'students');
+        renderStudentsView();
+        renderLeaderboard();
+        renderRewardsView();
+        renderHistoryView();
+        renderSettingsView();
+        renderPowerUpsView();
+        updateReasonsList();
       };
-      if (userClasses.length > 0 && !currentClassId) {
-        currentClassId = userClasses[0].id;
-        selector.value = currentClassId;
-      }
+      if (currentClassId) selector.value = currentClassId;
     }
 
     function openNewClassModal() {
@@ -2397,22 +2457,16 @@
         showNotification('Please enter class name', 'error');
         return;
       }
-      const newClass = {
-        id: generateId(),
-        name,
-        teacherUsername: currentUser.username,
-        createdAt: new Date().toISOString()
-      };
+      const newClass = { id: generateId(), name, teacherUsername: currentUser.username, createdAt: new Date().toISOString() };
       classes.push(newClass);
       students[newClass.id] = {};
       rewards[newClass.id] = {};
       history[newClass.id] = [];
       powerups[newClass.id] = {};
       reasons[newClass.id] = [];
+      currentClassId = newClass.id;
       saveData();
       updateClassSelector();
-      currentClassId = newClass.id;
-      document.getElementById('classSelector').value = currentClassId;
       renderStudentsView();
       closeModal('newClassModal');
       showNotification('Class created!', 'success');
@@ -2421,80 +2475,117 @@
     function getPowerUpInfo(studentId) {
       const student = students[currentClassId][studentId];
       if (student.powerUp && new Date(student.powerUp.endDate) > new Date()) {
-        return student.powerUp;
+        return { multiplier: student.powerUp.multiplier };
       }
-      delete student.powerUp;
       return null;
     }
 
     function renderStudentsView() {
       if (!currentClassId) return;
-      if (!students[currentClassId]) students[currentClassId] = {};
-      const classStudents = Object.values(students[currentClassId]).sort((a, b) => b.points - a.points);
-      const grid = document.getElementById('studentsGrid');
-      const list = document.getElementById('studentsList');
-      const view = document.querySelector('.view-option.active').dataset.view;
-      const columnsSelector = document.querySelector('.grid-columns-selector');
-      columnsSelector.style.display = view === 'grid' ? 'flex' : 'none';
-      grid.style.display = view === 'grid' ? 'grid' : 'none';
-      list.style.display = view === 'list' ? 'flex' : 'none';
-      grid.innerHTML = `
-        <div class="student-card add-student-card" onclick="openAddStudentModal()">
-          <div class="add-student-icon">➕</div>
-          <div>Add New Student</div>
-        </div>
-      ` + classStudents.map(student => {
-        const selected = selectedStudents.has(student.id) ? 'selected' : '';
-        const powerUpInfo = getPowerUpInfo(student.id);
-        const powerUpBadge = powerUpInfo ? `<div style="position: absolute; top: 0.5rem; right: 0.5rem; background: var(--warning-color); color: var(--surface); padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem;">x${powerUpInfo.multiplier}</div>` : '';
-        const avatar = student.photo ? `<img src="${student.photo}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
-        return `
-          <div class="student-card ${selected}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openStudentPointsModal('${student.id}', 'add')`}">
-            ${powerUpBadge}
+      const classStudents = students[currentClassId] || {};
+      const sortedStudents = Object.entries(classStudents).sort((a, b) => b[1].points - a[1].points);
+      if (currentView === 'grid') {
+        const grid = document.getElementById('studentsGrid');
+        grid.innerHTML = '';
+        sortedStudents.forEach(([id, student]) => {
+          const powerUpInfo = getPowerUpInfo(id);
+          const multiplierBadge = powerUpInfo ? `<span style="background: var(--warning-color); color: var(--surface); padding: 0.1rem 0.5rem; border-radius: 12px; font-size: 0.75rem; margin-left: 0.5rem;">x${powerUpInfo.multiplier}</span>` : '';
+          const avatar = student.photo ? `<img src="${student.photo}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
+          const card = document.createElement('div');
+          card.classList.add('student-card');
+          if (bulkMode && selectedStudents.has(id)) card.classList.add('selected');
+          card.innerHTML = `
             <div class="student-avatar">${avatar}</div>
-            <div class="student-name">${sanitizeHTML(student.name)}</div>
+            <div class="student-name">${sanitizeHTML(student.name)}${multiplierBadge}</div>
             <div class="student-points">${student.points} pts</div>
-            <div class="student-rewards">${student.pointsRewards || 0} rewards</div>
-            <div class="student-instant-rewards">${student.instantRewards || 0} instant</div>
-          </div>
-        `;
-      }).join('');
-      list.innerHTML = classStudents.map(student => {
-        const selected = selectedStudents.has(student.id) ? 'selected' : '';
-        const powerUpInfo = getPowerUpInfo(student.id);
-        const powerUpBadge = powerUpInfo ? `x${powerUpInfo.multiplier} ` : '';
-        const avatar = student.photo ? `<img src="${student.photo}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
-        return `
-          <div class="student-list-item ${selected}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openStudentPointsModal('${student.id}', 'add')`}">
+            <div class="student-rewards">Points Rewards: ${student.pointsRewards || 0}</div>
+            <div class="student-instant-rewards">Instant Rewards: ${student.instantRewards || 0}</div>
+          `;
+          if (bulkMode) {
+            card.onclick = () => toggleStudentSelection(id);
+          } else {
+            card.onclick = () => openStudentPointsModal(id, 'add');
+            card.ondblclick = () => openStudentPointsModal(id, 'subtract');
+          }
+          grid.appendChild(card);
+        });
+        if (!bulkMode) {
+          const addCard = document.createElement('div');
+          addCard.classList.add('student-card', 'add-student-card');
+          addCard.onclick = openAddStudentModal;
+          addCard.innerHTML = `
+            <div class="add-student-icon">➕</div>
+            <div>Add New Student</div>
+          `;
+          grid.appendChild(addCard);
+        }
+        grid.style.display = 'grid';
+      } else if (currentView === 'list') {
+        const list = document.getElementById('studentsList');
+        list.innerHTML = '';
+        sortedStudents.forEach(([id, student]) => {
+          const powerUpInfo = getPowerUpInfo(id);
+          const multiplierBadge = powerUpInfo ? `<span style="background: var(--warning-color); color: var(--surface); padding: 0.1rem 0.5rem; border-radius: 12px; font-size: 0.75rem; margin-left: 0.5rem;">x${powerUpInfo.multiplier}</span>` : '';
+          const avatar = student.photo ? `<img src="${student.photo}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
+          const item = document.createElement('div');
+          item.classList.add('student-list-item');
+          if (bulkMode && selectedStudents.has(id)) item.classList.add('selected');
+          item.innerHTML = `
             <div class="student-list-avatar">${avatar}</div>
             <div class="student-list-info">
-              <div class="student-list-name">${powerUpBadge}${sanitizeHTML(student.name)}</div>
-              <div class="student-list-details">${student.pointsRewards || 0} rewards | ${student.instantRewards || 0} instant</div>
+              <div class="student-list-name">${sanitizeHTML(student.name)}${multiplierBadge}</div>
+              <div class="student-list-details">Points Rewards: ${student.pointsRewards || 0} | Instant Rewards: ${student.instantRewards || 0}</div>
             </div>
             <div class="student-list-points">${student.points} pts</div>
             <div class="student-list-actions">
-              <button class="btn btn-success" onclick="event.stopPropagation(); openStudentPointsModal('${student.id}', 'add')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">+</button>
-              <button class="btn btn-warning" onclick="event.stopPropagation(); openStudentPointsModal('${student.id}', 'subtract')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">-</button>
-              <button class="btn btn-secondary" onclick="event.stopPropagation(); openEditStudentModal('${student.id}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">✏️</button>
+              <button class="btn btn-secondary" onclick="openEditStudentModal('${id}')">✏️</button>
             </div>
-          </div>
-        `;
-      }).join('');
+          `;
+          if (bulkMode) {
+            item.onclick = () => toggleStudentSelection(id);
+          } else {
+            item.onclick = () => openStudentPointsModal(id, 'add');
+          }
+          list.appendChild(item);
+        });
+        list.style.display = 'flex';
+      } else if (currentView === 'compact') {
+        const compact = document.getElementById('studentsCompact');
+        compact.innerHTML = '';
+        sortedStudents.forEach(([id, student]) => {
+          const powerUpInfo = getPowerUpInfo(id);
+          const multiplierBadge = powerUpInfo ? `<span style="font-size: 0.75rem; background: var(--warning-color); color: var(--surface); padding: 0.1rem 0.5rem; border-radius: 12px; margin-left: 0.5rem;">x${powerUpInfo.multiplier}</span>` : '';
+          const avatarHTML = student.photo ? `<img src="${student.photo}" alt="">` : student.name.charAt(0).toUpperCase();
+          const item = document.createElement('div');
+          item.className = 'compact-student-item' + (bulkMode && selectedStudents.has(id) ? ' selected' : '');
+          item.innerHTML = `
+            <div class="compact-avatar">${avatarHTML}</div>
+            <div class="compact-info">
+              <div class="compact-name">${sanitizeHTML(student.name)}${multiplierBadge}</div>
+            </div>
+            <div class="compact-points">${student.points} pts</div>
+          `;
+          if (bulkMode) {
+            item.onclick = () => toggleStudentSelection(id);
+          } else {
+            item.onclick = () => openStudentPointsModal(id, 'add');
+            item.ondblclick = () => openStudentPointsModal(id, 'subtract');
+          }
+          compact.appendChild(item);
+        });
+        compact.style.display = 'grid';
+      }
+      onSearchChange();
     }
 
     function switchStudentView(event, view) {
       document.querySelectorAll('.view-option').forEach(opt => opt.classList.remove('active'));
       event.target.classList.add('active');
-      
-      if (view === 'grid') {
-        document.getElementById('studentsGrid').style.display = 'grid';
-        document.getElementById('studentsList').style.display = 'none';
-      } else {
-        document.getElementById('studentsGrid').style.display = 'none';
-        document.getElementById('studentsList').style.display = 'flex';
-      }
-      const columnsSelector = document.querySelector('.grid-columns-selector');
-      columnsSelector.style.display = view === 'grid' ? 'flex' : 'none';
+      document.getElementById('studentsGrid').style.display = view === 'grid' ? 'grid' : 'none';
+      document.getElementById('studentsList').style.display = view === 'list' ? 'flex' : 'none';
+      document.getElementById('studentsCompact').style.display = view === 'compact' ? 'grid' : 'none';
+      currentView = view;
+      renderStudentsView();
     }
 
     function setGridColumns(val) {
@@ -2761,13 +2852,15 @@
 
     function onSearchChange() {
       const query = document.getElementById('searchInput').value.toLowerCase();
-      document.querySelectorAll('.student-card:not(.add-student-card)').forEach(card => {
-        const name = card.querySelector('.student-name').textContent.toLowerCase();
-        card.style.display = name.includes(query) ? 'block' : 'none';
-      });
-      document.querySelectorAll('.student-list-item').forEach(item => {
-        const name = item.querySelector('.student-list-name').textContent.toLowerCase();
-        item.style.display = name.includes(query) ? 'flex' : 'none';
+      const selectors = {
+        grid: '.student-card:not(.add-student-card)',
+        list: '.student-list-item',
+        compact: '.compact-student-item'
+      };
+      const currentSelector = selectors[currentView];
+      document.querySelectorAll(currentSelector).forEach(item => {
+        const name = item.querySelector('.student-name, .student-list-name, .compact-name').textContent.toLowerCase();
+        item.style.display = name.includes(query) ? '' : 'none';
       });
     }
 
@@ -2892,7 +2985,7 @@
         } else if (reward.type === 'deduct') {
           className = 'deduct-reward';
           badgeClass = 'deduct-badge';
-          badgeText = 'Deduct';
+          badgeText = 'Subtract';
         } else if (reward.type === 'require') {
           className = 'require-reward';
           badgeClass = 'require-badge';
@@ -3256,9 +3349,9 @@
       document.getElementById('totalPoints').textContent = Object.values(students[currentClassId] || {}).reduce((sum, s) => sum + s.points, 0);
       const savedReasonsList = document.getElementById('savedReasonsList');
       savedReasonsList.innerHTML = reasons[currentClassId].map((reason, index) => `
-        <div style="display: flex; align-items: center; background: var(--surface-secondary); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem; gap: 0.5rem;">
+        <div class="reason-chip">
           <span>${sanitizeHTML(reason)}</span>
-          <button class="btn btn-secondary" style="padding: 0.1rem 0.5rem; font-size: 0.75rem;" onclick="openEditReasonModal(${index})">✏️</button>
+          <button onclick="openEditReasonModal(${index})">✏️</button>
         </div>
       `).join('');
     }

@@ -251,6 +251,10 @@
       transition: transform 0.3s ease;
     }
    
+    .sidebar.collapsed {
+      transform: translateX(-100%);
+    }
+   
     .sidebar-header {
       padding: 1.5rem;
       border-bottom: 1px solid var(--border-color);
@@ -721,6 +725,18 @@
       font-size: 0.875rem;
       color: var(--info-color);
       font-weight: 500;
+    }
+
+    .student-actions {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      display: none;
+      gap: 0.5rem;
+    }
+
+    .student-card:hover .student-actions {
+      display: flex;
     }
    
     .add-student-card {
@@ -1352,6 +1368,12 @@
 
     /* Mobile Responsiveness */
     @media (max-width: 768px) {
+      .hamburger-menu {
+        display: block;
+      }
+      .sidebar-toggle {
+        display: none;
+      }
       .sidebar {
         transform: translateX(-100%);
       }
@@ -1363,10 +1385,6 @@
       .main-content {
         margin-left: 0;
         width: 100%;
-      }
-     
-      .hamburger-menu {
-        display: block;
       }
      
       .topbar {
@@ -1420,15 +1438,10 @@
       }
     }
 
-    /* Tablet Responsiveness */
-    @media (max-width: 1024px) and (min-width: 769px) {
-      .sidebar.collapsed {
-        transform: translateX(-100%);
-      }
-
-      .main-content.sidebar-collapsed {
-        margin-left: 0;
-        width: 100%;
+    /* Tablet and Desktop Responsiveness */
+    @media (min-width: 769px) {
+      .hamburger-menu {
+        display: none;
       }
     }
 
@@ -1760,8 +1773,8 @@
         <p>- Track all point changes in history.</p>
         <p>- Manage settings, reset points, or delete classes in the danger zone.</p>
         <h4>Admin Features (if applicable)</h4>
-        <p>- Create classes and teacher accounts.</p>
-        <p>- Manage embeds and school-wide data.</p>
+        <p>- View classes and teacher accounts.</p>
+        <p>- View embeds and school-wide data.</p>
         <p>For more details, explore the sidebar navigation.</p>
       </div>
       <div class="modal-footer">
@@ -1833,12 +1846,43 @@
         <h2 class="modal-title" id="classDetailTitle">Class Details</h2>
         <button class="modal-close" onclick="closeModal('classDetailModal')">&times;</button>
       </div>
-      <div id="classDetailContent">
-        <!-- Dynamic content loaded via JS -->
+      <div class="modal-body" id="classDetailContent">
+        <!-- Dynamic content -->
       </div>
       <div class="modal-footer">
-        <button class="btn btn-danger" onclick="deleteClassFromDetail()">Delete Class</button>
         <button class="btn btn-secondary" onclick="closeModal('classDetailModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Teacher Modal (Admin) -->
+  <div class="modal" id="editTeacherModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Teacher</h2>
+        <button class="modal-close" onclick="closeModal('editTeacherModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="editTeacherUsername">Username</label>
+          <input type="text" class="form-input" id="editTeacherUsername" disabled/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editTeacherCurrentPassword">Current Password</label>
+          <input type="text" class="form-input" id="editTeacherCurrentPassword" disabled/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editTeacherPassword">New Password</label>
+          <input type="password" class="form-input" id="editTeacherPassword" placeholder="Leave blank to keep current"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editTeacherConfirmPassword">Confirm New Password</label>
+          <input type="password" class="form-input" id="editTeacherConfirmPassword" placeholder="Confirm new password"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('editTeacherModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="updateTeacher()">Update Teacher</button>
       </div>
     </div>
   </div>
@@ -1847,7 +1891,7 @@
   <div class="modal" id="addStudentModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">Add New Student</h2>
+        <h2 class="modal-title">Add Student</h2>
         <button class="modal-close" onclick="closeModal('addStudentModal')">&times;</button>
       </div>
       <div class="modal-body">
@@ -1856,20 +1900,40 @@
           <input type="text" class="form-input" id="studentName" placeholder="Enter student name"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="initialPoints">Initial Points</label>
+          <label class="form-label" for="initialPoints">Initial Points (optional)</label>
           <input type="number" class="form-input" id="initialPoints" value="0" min="0"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="studentPhoto">Photo (optional)</label>
-          <input type="file" id="studentPhoto" accept="image/*" onchange="previewPhoto(event, 'photoPreview')"/>
+          <label class="form-label" for="studentPhoto">Student Photo (optional)</label>
+          <input type="file" class="form-input file-upload" id="studentPhoto" accept="image/*" onchange="previewPhoto(event, 'photoPreview')"/>
           <div id="photoPreview" style="display: none; margin-top: 1rem;">
-            <img src="" alt="Preview" style="max-width: 100px; border-radius: 50%;">
+            <img src="" alt="Preview" style="max-width: 100%; border-radius: 8px;"/>
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('addStudentModal')">Cancel</button>
         <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Multiple Students Modal -->
+  <div class="modal" id="addMultipleModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Multiple Students</h2>
+        <button class="modal-close" onclick="closeModal('addMultipleModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="multipleNames">Student Names (one per line)</label>
+          <textarea class="form-input" id="multipleNames" rows="10" placeholder="John Doe&#10;Jane Smith&#10;..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addMultipleModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addMultipleStudents()">Add Students</button>
       </div>
     </div>
   </div>
@@ -1887,37 +1951,17 @@
           <input type="text" class="form-input" id="editStudentName" placeholder="Enter student name"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="editStudentPhoto">Photo (optional)</label>
-          <input type="file" id="editStudentPhoto" accept="image/*" onchange="previewPhoto(event, 'editPhotoPreview')"/>
+          <label class="form-label" for="editStudentPhoto">Update Photo (optional)</label>
+          <input type="file" class="form-input file-upload" id="editStudentPhoto" accept="image/*" onchange="previewPhoto(event, 'editPhotoPreview')"/>
           <div id="editPhotoPreview" style="display: none; margin-top: 1rem;">
-            <img id="editPreviewImg" src="" alt="Preview" style="max-width: 100px; border-radius: 50%;">
+            <img id="editPreviewImg" src="" alt="Preview" style="max-width: 100%; border-radius: 8px;"/>
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-danger" onclick="deleteStudent()">Delete Student</button>
         <button class="btn btn-secondary" onclick="closeModal('editStudentModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="updateStudent()">Save Changes</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Multiple Students Modal -->
-  <div class="modal" id="addMultipleModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Add Multiple Students</h2>
-        <button class="modal-close" onclick="closeModal('addMultipleModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="multipleNames">Student Names (one per line)</label>
-          <textarea class="form-input" id="multipleNames" rows="10" placeholder="Student 1\nStudent 2\nStudent 3"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('addMultipleModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="addMultipleStudents()">Add Students</button>
+        <button class="btn btn-primary" onclick="updateStudent()">Update Student</button>
       </div>
     </div>
   </div>
@@ -1930,10 +1974,10 @@
         <button class="modal-close" onclick="closeModal('bulkPointsModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <p id="bulkSummary">Apply to 0 selected students</p>
+        <p id="bulkSummary"></p>
         <div class="form-group">
           <label class="form-label" for="bulkReason">Reason (optional)</label>
-          <input type="text" class="form-input" id="bulkReason" list="reasonsList" placeholder="Enter reason"/>
+          <input type="text" class="form-input" id="bulkReason" placeholder="Enter reason" list="reasonsList"/>
         </div>
       </div>
       <div class="modal-footer">
@@ -1947,17 +1991,18 @@
   <div class="modal" id="studentPointsModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title" id="studentModalTitle">Add Points</h2>
+        <h2 class="modal-title" id="studentModalTitle">Change Points</h2>
         <button class="modal-close" onclick="closeModal('studentPointsModal')">&times;</button>
       </div>
       <div class="modal-body">
+        <p>Positive to add, negative to deduct (e.g., 1 to add, -1 to deduct)</p>
         <div class="form-group">
-          <label class="form-label" for="pointsChange">Points Amount</label>
-          <input type="number" class="form-input" id="pointsChange" value="1" min="1"/>
+          <label class="form-label" for="pointsChange">Points Change</label>
+          <input type="number" class="form-input" id="pointsChange" value="1" step="1"/>
         </div>
         <div class="form-group">
           <label class="form-label" for="pointsReason">Reason (optional)</label>
-          <input type="text" class="form-input" id="pointsReason" list="reasonsList" placeholder="Enter reason"/>
+          <input type="text" class="form-input" id="pointsReason" placeholder="Enter reason" list="reasonsList"/>
         </div>
       </div>
       <div class="modal-footer">
@@ -1971,30 +2016,30 @@
   <div class="modal" id="createRewardModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">Create New Reward</h2>
+        <h2 class="modal-title">Create Reward</h2>
         <button class="modal-close" onclick="closeModal('createRewardModal')">&times;</button>
       </div>
       <div class="modal-body">
         <div class="reward-type-toggle">
-          <button class="reward-type-option active" data-type="deduct" onclick="selectRewardType('deduct')">Subtract Points</button>
+          <button class="reward-type-option active" data-type="deduct" onclick="selectRewardType('deduct')">Deduct Points</button>
           <button class="reward-type-option" data-type="require" onclick="selectRewardType('require')">Require Points</button>
           <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant')">Instant Reward</button>
         </div>
         <div class="form-group">
-          <label class="form-label" for="rewardTitle">Title</label>
+          <label class="form-label" for="rewardTitle">Reward Title</label>
           <input type="text" class="form-input" id="rewardTitle" placeholder="Enter reward title"/>
         </div>
         <div class="form-group">
           <label class="form-label" for="rewardDescription">Description (optional)</label>
-          <textarea class="form-input" id="rewardDescription" placeholder="Enter description"></textarea>
+          <textarea class="form-input" id="rewardDescription" rows="3" placeholder="Enter description"></textarea>
         </div>
         <div class="form-group" id="rewardPointsGroup">
           <label class="form-label" for="rewardPoints">Points Required</label>
           <input type="number" class="form-input" id="rewardPoints" min="1" value="10"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="rewardIcon">Icon Emoji (optional)</label>
-          <input type="text" class="form-input" id="rewardIcon" placeholder="e.g., 🎉"/>
+          <label class="form-label" for="rewardIcon">Icon (emoji, optional)</label>
+          <input type="text" class="form-input" id="rewardIcon" placeholder="e.g., 🏆"/>
         </div>
       </div>
       <div class="modal-footer">
@@ -2013,31 +2058,31 @@
       </div>
       <div class="modal-body">
         <div class="reward-type-toggle">
-          <button class="reward-type-option" data-type="deduct" onclick="selectRewardType('deduct', 'edit')">Subtract Points</button>
+          <button class="reward-type-option" data-type="deduct" onclick="selectRewardType('deduct', 'edit')">Deduct Points</button>
           <button class="reward-type-option" data-type="require" onclick="selectRewardType('require', 'edit')">Require Points</button>
           <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant', 'edit')">Instant Reward</button>
         </div>
         <div class="form-group">
-          <label class="form-label" for="editRewardTitle">Title</label>
+          <label class="form-label" for="editRewardTitle">Reward Title</label>
           <input type="text" class="form-input" id="editRewardTitle" placeholder="Enter reward title"/>
         </div>
         <div class="form-group">
           <label class="form-label" for="editRewardDescription">Description (optional)</label>
-          <textarea class="form-input" id="editRewardDescription" placeholder="Enter description"></textarea>
+          <textarea class="form-input" id="editRewardDescription" rows="3" placeholder="Enter description"></textarea>
         </div>
         <div class="form-group" id="editRewardPointsGroup">
           <label class="form-label" for="editRewardPoints">Points Required</label>
           <input type="number" class="form-input" id="editRewardPoints" min="1" value="10"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="editRewardIcon">Icon Emoji (optional)</label>
-          <input type="text" class="form-input" id="editRewardIcon" placeholder="e.g., 🎉"/>
+          <label class="form-label" for="editRewardIcon">Icon (emoji, optional)</label>
+          <input type="text" class="form-input" id="editRewardIcon" placeholder="e.g., 🏆"/>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-danger" onclick="deleteReward()">Delete Reward</button>
         <button class="btn btn-secondary" onclick="closeModal('editRewardModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="updateReward()">Save Changes</button>
+        <button class="btn btn-primary" onclick="updateReward()">Update Reward</button>
       </div>
     </div>
   </div>
@@ -2049,12 +2094,12 @@
         <h2 class="modal-title">Claim Reward</h2>
         <button class="modal-close" onclick="closeModal('claimRewardModal')">&times;</button>
       </div>
-      <div id="claimRewardContent">
-        <!-- Dynamic content loaded via JS -->
+      <div class="modal-body" id="claimRewardContent">
+        <!-- Dynamic content -->
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('claimRewardModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="confirmClaimReward()">Confirm</button>
+        <button class="btn btn-primary">Confirm Claim</button>
       </div>
     </div>
   </div>
@@ -2063,7 +2108,7 @@
   <div class="modal" id="createPowerUpModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">Create New Power Up</h2>
+        <h2 class="modal-title">Create Power Up</h2>
         <button class="modal-close" onclick="closeModal('createPowerUpModal')">&times;</button>
       </div>
       <div class="modal-body">
@@ -2073,11 +2118,11 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="powerUpDescription">Description (optional)</label>
-          <textarea class="form-input" id="powerUpDescription" placeholder="Enter description"></textarea>
+          <textarea class="form-input" id="powerUpDescription" rows="3" placeholder="Enter description"></textarea>
         </div>
         <div class="form-group">
           <label class="form-label" for="powerUpMultiplier">Multiplier</label>
-          <input type="number" class="form-input" id="powerUpMultiplier" step="0.1" min="1" value="1.5"/>
+          <input type="number" class="form-input" id="powerUpMultiplier" min="1" step="0.1" value="1.5"/>
         </div>
         <div class="form-group">
           <label class="form-label" for="powerUpDuration">Duration (days)</label>
@@ -2105,11 +2150,11 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="editPowerUpDescription">Description (optional)</label>
-          <textarea class="form-input" id="editPowerUpDescription" placeholder="Enter description"></textarea>
+          <textarea class="form-input" id="editPowerUpDescription" rows="3" placeholder="Enter description"></textarea>
         </div>
         <div class="form-group">
           <label class="form-label" for="editPowerUpMultiplier">Multiplier</label>
-          <input type="number" class="form-input" id="editPowerUpMultiplier" step="0.1" min="1" value="1.5"/>
+          <input type="number" class="form-input" id="editPowerUpMultiplier" min="1" step="0.1" value="1.5"/>
         </div>
         <div class="form-group">
           <label class="form-label" for="editPowerUpDuration">Duration (days)</label>
@@ -2119,7 +2164,7 @@
       <div class="modal-footer">
         <button class="btn btn-danger" onclick="deletePowerUp()">Delete Power Up</button>
         <button class="btn btn-secondary" onclick="closeModal('editPowerUpModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="updatePowerUp()">Save Changes</button>
+        <button class="btn btn-primary" onclick="updatePowerUp()">Update Power Up</button>
       </div>
     </div>
   </div>
@@ -2140,16 +2185,16 @@
       <div class="modal-footer">
         <button class="btn btn-danger" onclick="deleteReason()">Delete Reason</button>
         <button class="btn btn-secondary" onclick="closeModal('editReasonModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="updateReason()">Save</button>
+        <button class="btn btn-primary" onclick="updateReason()">Update Reason</button>
       </div>
     </div>
   </div>
 
-  <!-- Add Embed Modal -->
+  <!-- Add Embed Modal (Admin) -->
   <div class="modal" id="addEmbedModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">Add New Embed</h2>
+        <h2 class="modal-title">Add Embed</h2>
         <button class="modal-close" onclick="closeModal('addEmbedModal')">&times;</button>
       </div>
       <div class="modal-body">
@@ -2158,8 +2203,8 @@
           <input type="text" class="form-input" id="embedName" placeholder="Enter embed name"/>
         </div>
         <div class="form-group">
-          <label class="form-label" for="embedUrl">Embed URL</label>
-          <input type="url" class="form-input" id="embedUrl" placeholder="Enter valid URL"/>
+          <label class="form-label" for="embedUrl">URL</label>
+          <input type="url" class="form-input" id="embedUrl" placeholder="Enter URL"/>
         </div>
       </div>
       <div class="modal-footer">
@@ -2169,39 +2214,8 @@
     </div>
   </div>
 
-  <!-- Edit Teacher Modal -->
-  <div class="modal" id="editTeacherModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Edit Teacher Account</h2>
-        <button class="modal-close" onclick="closeModal('editTeacherModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="editTeacherUsername">Username</label>
-          <input type="text" class="form-input" id="editTeacherUsername" disabled/>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="editTeacherCurrentPassword">Current Password</label>
-          <input type="text" class="form-input" id="editTeacherCurrentPassword" disabled/>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="editTeacherPassword">New Password (optional)</label>
-          <input type="password" class="form-input" id="editTeacherPassword" placeholder="Leave blank to keep current"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="editTeacherConfirmPassword">Confirm New Password</label>
-          <input type="password" class="form-input" id="editTeacherConfirmPassword" placeholder="Confirm if changing"/>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('editTeacherModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="updateTeacher()">Save Changes</button>
-      </div>
-    </div>
-  </div>
-
   <script>
+    // Global Variables
     let currentUser = null;
     let currentClassId = null;
     let classes = [];
@@ -2212,17 +2226,22 @@
     let reasons = {};
     let embeds = {};
     let users = {};
-    let currentView = 'grid';
     let bulkMode = false;
     let selectedStudents = new Set();
-    let bulkAction = 'add';
+    let bulkAction = null;
     let currentStudentId = null;
     let currentRewardId = null;
-    let selectedRewardType = 'deduct';
     let currentPowerUpId = null;
     let currentReasonIndex = null;
+    let currentView = 'grid';
     let demoMode = false;
+    let selectedRewardType = 'deduct';
     let currentTeacherUsername = null;
+
+    // Utility Functions
+    function generateId() {
+      return Math.random().toString(36).substr(2, 9);
+    }
 
     function sanitizeHTML(str) {
       const temp = document.createElement('div');
@@ -2230,53 +2249,61 @@
       return temp.innerHTML;
     }
 
-    function generateId() {
-      return Date.now().toString(36) + Math.random().toString(36).substring(2);
+    function showNotification(message, type = 'info') {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.className = `notification ${type}`;
+      notification.classList.add('show');
+      setTimeout(() => notification.classList.remove('show'), 3000);
     }
 
-    function getPowerUpInfo(studentId) {
-      const student = students[currentClassId][studentId];
-      if (!student.powerUp) return null;
-      if (new Date(student.powerUp.endDate) < new Date()) {
-        delete student.powerUp;
-        saveData();
-        return null;
-      }
-      return student.powerUp;
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('mobile-open');
+    }
+
+    function toggleSidebarCollapse() {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+      document.getElementById('mainContent').classList.toggle('collapsed');
     }
 
     function saveData() {
       if (demoMode) return;
-      const data = {
-        users,
-        classes,
-        students,
-        rewards,
-        history,
-        powerups,
-        reasons,
-        embeds
-      };
-      localStorage.setItem('rebbePointsData', JSON.stringify(data));
+      localStorage.setItem('classes', JSON.stringify(classes));
+      localStorage.setItem('students', JSON.stringify(students));
+      localStorage.setItem('rewards', JSON.stringify(rewards));
+      localStorage.setItem('history', JSON.stringify(history));
+      localStorage.setItem('powerups', JSON.stringify(powerups));
+      localStorage.setItem('reasons', JSON.stringify(reasons));
+      localStorage.setItem('embeds', JSON.stringify(embeds));
+      localStorage.setItem('users', JSON.stringify(users));
+      sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+      sessionStorage.setItem('currentClassId', currentClassId);
     }
 
     function loadData() {
-      const data = localStorage.getItem('rebbePointsData');
-      if (data) {
-        const parsed = JSON.parse(data);
-        users = parsed.users || {};
-        classes = parsed.classes || [];
-        students = parsed.students || {};
-        rewards = parsed.rewards || {};
-        history = parsed.history || {};
-        powerups = parsed.powerups || {};
-        reasons = parsed.reasons || {};
-        embeds = parsed.embeds || {};
-      }
-      const sessionUser = sessionStorage.getItem('currentUser');
-      if (sessionUser) {
-        currentUser = JSON.parse(sessionUser);
-      }
+      classes = JSON.parse(localStorage.getItem('classes') || '[]');
+      students = JSON.parse(localStorage.getItem('students') || '{}');
+      rewards = JSON.parse(localStorage.getItem('rewards') || '{}');
+      history = JSON.parse(localStorage.getItem('history') || '{}');
+      powerups = JSON.parse(localStorage.getItem('powerups') || '{}');
+      reasons = JSON.parse(localStorage.getItem('reasons') || '{}');
+      embeds = JSON.parse(localStorage.getItem('embeds') || '{}');
+      users = JSON.parse(localStorage.getItem('users') || '{}');
+      currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+      currentClassId = sessionStorage.getItem('currentClassId');
+    }
+
+    function logout() {
+      sessionStorage.clear();
+      location.reload();
     }
 
     function showLogin() {
@@ -2292,6 +2319,7 @@
     function selectAccountType(type) {
       document.querySelectorAll('.account-type-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelector(`[data-type="${type}"]`).classList.add('active');
+      currentUserType = type;
     }
 
     function signup() {
@@ -2299,10 +2327,11 @@
       const password = document.getElementById('signupPassword').value.trim();
       const confirmPassword = document.getElementById('signupConfirmPassword').value.trim();
       const school = document.getElementById('signupSchool').value.trim();
-      const type = document.querySelector('.account-type-btn.active').dataset.type;
       const error = document.getElementById('signupError');
+      const success = document.getElementById('signupSuccess');
       error.style.display = 'none';
-      if (!username || !password || !confirmPassword || !school) {
+      success.style.display = 'none';
+      if (!username || !password || !school) {
         error.textContent = 'Please fill all fields';
         error.style.display = 'block';
         return;
@@ -2321,13 +2350,13 @@
         username,
         password,
         school,
-        type,
+        type: currentUserType || 'personal',
         createdAt: new Date().toISOString()
       };
       users[username] = user;
       saveData();
-      document.getElementById('signupSuccess').textContent = 'Account created! Please login.';
-      document.getElementById('signupSuccess').style.display = 'block';
+      success.textContent = 'Account created! You can now sign in.';
+      success.style.display = 'block';
       setTimeout(showLogin, 2000);
     }
 
@@ -2343,105 +2372,65 @@
         return;
       }
       currentUser = user;
-      sessionStorage.setItem('currentUser', JSON.stringify(user));
+      saveData();
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appLayout').classList.add('active');
       initializeApp();
-    }
-
-    function logout() {
-      currentUser = null;
-      currentClassId = null;
-      sessionStorage.removeItem('currentUser');
-      document.getElementById('appLayout').classList.remove('active');
-      showLogin();
     }
 
     function initializeApp() {
       document.getElementById('sidebarUsername').textContent = currentUser.username;
       document.getElementById('sidebarUserAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
       document.getElementById('sidebarSchool').textContent = currentUser.school;
-      updateNavItems();
-      updateClassSelector();
-      if (currentUser.type === 'personal') {
-        if (classes.length > 0) {
-          currentClassId = classes[0].id;
-          document.getElementById('classSelector').value = currentClassId;
-        }
-        renderStudentsView();
-      } else {
-        renderAdminView();
-      }
-    }
-
-    function updateNavItems() {
       const nav = document.querySelector('.sidebar-nav');
-      let items = '';
-      if (currentUser.type === 'personal') {
-        items = `
-          <div class="nav-section">
-            <div class="nav-section-title">Management</div>
-            <a class="nav-item active" onclick="switchView('studentsView')" data-view="studentsView">
-              <span class="nav-icon">👥</span> Students
-            </a>
-            <a class="nav-item" onclick="switchView('leaderboardView')" data-view="leaderboardView">
-              <span class="nav-icon">🏆</span> Leaderboard
-            </a>
-            <a class="nav-item" onclick="switchView('rewardsView')" data-view="rewardsView">
-              <span class="nav-icon">🎁</span> Rewards
-            </a>
-            <a class="nav-item" onclick="switchView('powerupsView')" data-view="powerupsView">
-              <span class="nav-icon">⚡</span> Power Ups
-            </a>
-            <a class="nav-item" onclick="switchView('historyView')" data-view="historyView">
-              <span class="nav-icon">📜</span> History
-            </a>
-            <a class="nav-item" onclick="switchView('settingsView')" data-view="settingsView">
-              <span class="nav-icon">⚙️</span> Settings
-            </a>
-            <a class="nav-item" onclick="switchView('extrasView')" data-view="extrasView">
-              <span class="nav-icon">📌</span> Extras
-            </a>
-          </div>
-        `;
-      } else {
-        items = `
+      const commonNav = `
+        <div class="nav-section">
+          <div class="nav-section-title">Classes</div>
+          <div class="nav-item active" data-view="students" onclick="switchView('students')"><span class="nav-icon">👥</span>Students</div>
+          <div class="nav-item" data-view="leaderboard" onclick="switchView('leaderboard')"><span class="nav-icon">🏆</span>Leaderboard</div>
+          <div class="nav-item" data-view="rewards" onclick="switchView('rewards')"><span class="nav-icon">🎁</span>Rewards</div>
+          <div class="nav-item" data-view="powerups" onclick="switchView('powerups')"><span class="nav-icon">⚡</span>Power Ups</div>
+          <div class="nav-item" data-view="history" onclick="switchView('history')"><span class="nav-icon">📜</span>History</div>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Other</div>
+          <div class="nav-item" data-view="extras" onclick="switchView('extras')"><span class="nav-icon">🛠️</span>Extras</div>
+          <div class="nav-item" data-view="settings" onclick="switchView('settings')"><span class="nav-icon">⚙️</span>Settings</div>
+        </div>
+      `;
+      if (currentUser.type === 'admin') {
+        nav.innerHTML = `
           <div class="nav-section">
             <div class="nav-section-title">Admin</div>
-            <a class="nav-item active" onclick="switchView('admin-classesView')" data-view="admin-classesView">
-              <span class="nav-icon">🏫</span> Classes
-            </a>
-            <a class="nav-item" onclick="switchView('admin-teachersView')" data-view="admin-teachersView">
-              <span class="nav-icon">👩‍🏫</span> Teachers
-            </a>
-            <a class="nav-item" onclick="switchView('admin-embedsView')" data-view="admin-embedsView">
-              <span class="nav-icon">📺</span> Embeds
-            </a>
-            <a class="nav-item" onclick="switchView('settingsView')" data-view="settingsView">
-              <span class="nav-icon">⚙️</span> Settings
-            </a>
+            <div class="nav-item active" data-view="admin-classes" onclick="switchView('admin-classes')"><span class="nav-icon">🏫</span>Classes</div>
+            <div class="nav-item" data-view="admin-teachers" onclick="switchView('admin-teachers')"><span class="nav-icon">👩‍🏫</span>Teachers</div>
+            <div class="nav-item" data-view="admin-embeds" onclick="switchView('admin-embeds')"><span class="nav-icon">🖥️</span>Embeds</div>
           </div>
         `;
+        switchView('admin-classes');
+      } else {
+        nav.innerHTML = commonNav;
+        updateClassSelector();
+        switchView('students');
       }
-      nav.innerHTML = items;
     }
 
-    function switchView(viewId) {
-      document.querySelectorAll('[id$="View"]').forEach(v => v.style.display = 'none');
-      document.getElementById(viewId).style.display = 'block';
+    function switchView(view) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      document.querySelector(`[data-view="${viewId}"]`).classList.add('active');
-      document.getElementById('pageTitle').textContent = viewId.replace('View', '').replace('admin-', '').replace(/([A-Z])/g, ' $1').trim();
-      if (viewId === 'studentsView') renderStudentsView();
-      if (viewId === 'leaderboardView') renderLeaderboard();
-      if (viewId === 'rewardsView') renderRewardsView();
-      if (viewId === 'powerupsView') renderPowerUpsView();
-      if (viewId === 'historyView') renderHistoryView();
-      if (viewId === 'settingsView') renderSettingsView();
-      if (viewId === 'extrasView') renderExtrasView();
-      if (viewId === 'admin-classesView') renderAdminClassesView();
-      if (viewId === 'admin-teachersView') renderAdminTeachersView();
-      if (viewId === 'admin-embedsView') renderAdminEmbedsView();
+      document.querySelector(`[data-view="${view}"]`).classList.add('active');
+      document.querySelectorAll('.content-area > div').forEach(div => div.style.display = 'none');
+      document.getElementById(`${view}View`).style.display = 'block';
+      document.getElementById('pageTitle').textContent = view.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      if (view === 'students') renderStudentsView();
+      if (view === 'leaderboard') renderLeaderboard();
+      if (view === 'rewards') renderRewardsView();
+      if (view === 'history') renderHistoryView();
+      if (view === 'settings') renderSettingsView();
+      if (view === 'extras') renderExtrasView();
+      if (view === 'powerups') renderPowerUpsView();
+      if (view === 'admin-classes') renderAdminClassesView();
+      if (view === 'admin-teachers') renderAdminTeachersView();
+      if (view === 'admin-embeds') renderAdminEmbedsView();
     }
 
     function updateClassSelector() {
@@ -2454,23 +2443,28 @@
         option.textContent = cls.name;
         selector.appendChild(option);
       });
+      if (currentClassId) selector.value = currentClassId;
+      else if (userClasses.length > 0) currentClassId = userClasses[0].id;
       selector.onchange = () => {
         currentClassId = selector.value;
-        renderStudentsView();
-        updateReasonsList();
+        saveData();
+        switchView(document.querySelector('.nav-item.active').dataset.view);
       };
-      if (userClasses.length > 0) {
-        currentClassId = userClasses[0].id;
-        selector.value = currentClassId;
-        updateReasonsList();
-        renderStudentsView();
-      }
+      if (userClasses.length === 0) selector.style.display = 'none';
+      else selector.style.display = '';
     }
 
     function openNewClassModal() {
-      // For personal users, create class
-      const name = prompt('Enter class name');
-      if (!name) return;
+      document.getElementById('newClassName').value = '';
+      openModal('newClassModal');
+    }
+
+    function createNewClass() {
+      const name = document.getElementById('newClassName').value.trim();
+      if (!name) {
+        showNotification('Please enter class name', 'error');
+        return;
+      }
       const newClass = {
         id: generateId(),
         name,
@@ -2483,125 +2477,88 @@
       history[newClass.id] = [];
       powerups[newClass.id] = {};
       reasons[newClass.id] = [];
+      currentClassId = newClass.id;
       saveData();
       updateClassSelector();
-      selector.value = newClass.id;
-      currentClassId = newClass.id;
       renderStudentsView();
+      closeModal('newClassModal');
       showNotification('Class created!', 'success');
     }
 
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('mobile-open');
-    }
-
-    function toggleSidebarCollapse() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
-      document.getElementById('mainContent').classList.toggle('sidebar-collapsed');
-    }
-
-    function openModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
-    }
-
-    function closeModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
-    }
-
-    function showNotification(message, type = 'info') {
-      const notification = document.getElementById('notification');
-      notification.textContent = message;
-      notification.classList.remove('success', 'info', 'warning', 'error');
-      notification.classList.add(type);
-      notification.classList.add('show');
-      setTimeout(() => notification.classList.remove('show'), 3000);
-    }
-
-    function copyAllStudentNames() {
-      if (!currentClassId) return;
-      const names = Object.values(students[currentClassId]).map(s => s.name).join('\n');
-      navigator.clipboard.writeText(names).then(() => showNotification('Copied to clipboard!', 'success'));
-    }
-
-    function openAboutModal() {
-      openModal('aboutModal');
-    }
-
-    function renderAdminView() {
-      // Add admin views if needed, assuming in content-area
-      const content = document.getElementById('content-area');
-      content.innerHTML += `
-        <div id="admin-classesView"></div>
-        <div id="admin-teachersView" style="display: none;"></div>
-        <div id="admin-embedsView" style="display: none;"></div>
-      `;
-      switchView('admin-classesView');
-    }
-
-    function searchAdminClasses(query) {
-      const lowerQuery = query.toLowerCase();
-      document.querySelectorAll('.class-detail-card').forEach(card => {
-        const title = card.querySelector('.class-detail-title').textContent.toLowerCase();
-        card.style.display = title.includes(lowerQuery) ? 'block' : 'none';
-      });
+    function getPowerUpInfo(studentId) {
+      const student = students[currentClassId][studentId];
+      if (!student.powerUp) return null;
+      const now = new Date();
+      const end = new Date(student.powerUp.endDate);
+      if (now > end) {
+        delete student.powerUp;
+        saveData();
+        return null;
+      }
+      return student.powerUp;
     }
 
     function renderStudentsView() {
       if (!currentClassId) return;
-      const classStudents = Object.values(students[currentClassId] || {});
-      const sortedStudents = classStudents.sort((a, b) => b.points - a.points);
+      if (!students[currentClassId]) students[currentClassId] = {};
+      if (!reasons[currentClassId]) reasons[currentClassId] = [];
+      updateReasonsList();
+      const classStudents = Object.values(students[currentClassId]);
       const grid = document.getElementById('studentsGrid');
       const list = document.getElementById('studentsList');
       const compact = document.getElementById('studentsCompact');
-      let gridHTML = '<div class="student-card add-student-card" onclick="openAddStudentModal()"><div class="add-student-icon">➕</div><div>Add New Student</div></div>';
-      let listHTML = '';
-      let compactHTML = '';
-      sortedStudents.forEach(student => {
-        const selected = bulkMode && selectedStudents.has(student.id) ? 'selected' : '';
-        const avatar = student.photo ? `<img src="${student.photo}" alt="${sanitizeHTML(student.name)}">` : sanitizeHTML(student.name.charAt(0).toUpperCase());
+      grid.innerHTML = '';
+      list.innerHTML = '';
+      compact.innerHTML = '';
+      classStudents.forEach(student => {
         const powerUpInfo = getPowerUpInfo(student.id);
-        const powerUpBadge = powerUpInfo ? `<span style="position: absolute; top: 0.5rem; right: 0.5rem; background: var(--warning-color); color: var(--surface); padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem;">x${powerUpInfo.multiplier}</span>` : '';
-        gridHTML += `
-          <div class="student-card ${selected}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openEditStudentModal('${student.id}')`}">
-            ${powerUpBadge}
+        const multiplierBadge = powerUpInfo ? `<span style="background: var(--warning-color); color: var(--surface); padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem; margin-left: 0.5rem;">x${powerUpInfo.multiplier}</span>` : '';
+        const selectedClass = selectedStudents.has(student.id) ? 'selected' : '';
+        const avatar = student.photo ? `<img src="${student.photo}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
+        const gridItem = `
+          <div class="student-card ${selectedClass}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openStudentPointsModal('${student.id}')`}">
+            <div class="student-actions">
+              <button class="btn btn-secondary" onclick="event.stopPropagation(); openEditStudentModal('${student.id}')">Edit</button>
+            </div>
             <div class="student-avatar">${avatar}</div>
             <div class="student-name">${sanitizeHTML(student.name)}</div>
-            <div class="student-points">${student.points} pts</div>
-            <div class="student-rewards">Points Rewards: ${student.pointsRewards || 0}</div>
-            <div class="student-instant-rewards">Instant Rewards: ${student.instantRewards || 0}</div>
-            <div class="action-buttons mt-4">
-              <button class="btn btn-success" onclick="event.stopPropagation(); openStudentPointsModal('${student.id}', 'add')">+ Points</button>
-              <button class="btn btn-warning" onclick="event.stopPropagation(); openStudentPointsModal('${student.id}', 'subtract')">- Points</button>
-            </div>
+            <div class="student-points">${student.points} pts${multiplierBadge}</div>
+            <div class="student-rewards">${student.pointsRewards || 0} rewards</div>
+            <div class="student-instant-rewards">${student.instantRewards || 0} instant</div>
           </div>
         `;
-        listHTML += `
-          <div class="student-list-item ${selected}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openEditStudentModal('${student.id}')`}">
+        const listItem = `
+          <div class="student-list-item ${selectedClass}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openStudentPointsModal('${student.id}')`}">
             <div class="student-list-avatar">${avatar}</div>
             <div class="student-list-info">
               <div class="student-list-name">${sanitizeHTML(student.name)}</div>
-              <div class="student-list-details">Points Rewards: ${student.pointsRewards || 0} | Instant: ${student.instantRewards || 0}</div>
+              <div class="student-list-details">${student.pointsRewards || 0} rewards | ${student.instantRewards || 0} instant</div>
             </div>
-            <div class="student-list-points">${student.points} pts</div>
+            <div class="student-list-points">${student.points} pts${multiplierBadge}</div>
             <div class="student-list-actions">
-              <button class="btn btn-success btn-small" onclick="event.stopPropagation(); openStudentPointsModal('${student.id}', 'add')">+</button>
-              <button class="btn btn-warning btn-small" onclick="event.stopPropagation(); openStudentPointsModal('${student.id}', 'subtract')">-</button>
+              <button class="btn btn-secondary" onclick="event.stopPropagation(); openEditStudentModal('${student.id}')">Edit</button>
             </div>
           </div>
         `;
-        compactHTML += `
-          <div class="compact-student-item ${selected}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openEditStudentModal('${student.id}')`}">
+        const compactItem = `
+          <div class="compact-student-item ${selectedClass}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openStudentPointsModal('${student.id}')`}">
             <div class="compact-avatar">${avatar}</div>
             <div class="compact-info">
               <div class="compact-name">${sanitizeHTML(student.name)}</div>
             </div>
-            <div class="compact-points">${student.points} pts</div>
+            <div class="compact-points">${student.points} pts${multiplierBadge}</div>
           </div>
         `;
+        grid.insertAdjacentHTML('beforeend', gridItem);
+        list.insertAdjacentHTML('beforeend', listItem);
+        compact.insertAdjacentHTML('beforeend', compactItem);
       });
-      grid.innerHTML = gridHTML;
-      list.innerHTML = listHTML;
-      compact.innerHTML = compactHTML;
+      grid.insertAdjacentHTML('beforeend', `
+        <div class="student-card add-student-card" onclick="openAddStudentModal()">
+          <div class="add-student-icon">➕</div>
+          <div>Add New Student</div>
+        </div>
+      `);
       onSearchChange();
     }
 
@@ -2827,24 +2784,22 @@
       showNotification(`${bulkAction === 'add' ? 'Added' : 'Subtracted'} points to selected students`, 'success');
     }
 
-    function openStudentPointsModal(studentId, action) {
+    function openStudentPointsModal(studentId) {
       currentStudentId = studentId;
-      bulkAction = action; // Reuse for single
-      const title = action === 'add' ? 'Add Points' : 'Subtract Points';
-      document.getElementById('studentModalTitle').textContent = title;
+      document.getElementById('studentModalTitle').textContent = 'Change Points';
       document.getElementById('pointsChange').value = 1;
       document.getElementById('pointsReason').value = '';
       openModal('studentPointsModal');
     }
 
     function updateStudentPoints() {
-      const pointsChange = parseInt(document.getElementById('pointsChange').value);
+      const change = parseInt(document.getElementById('pointsChange').value);
       const reason = document.getElementById('pointsReason').value.trim();
-      if (!pointsChange || pointsChange < 1) {
+      if (isNaN(change)) {
         showNotification('Please enter valid points', 'error');
         return;
       }
-      const change = bulkAction === 'add' ? pointsChange : -pointsChange;
+      const type = change > 0 ? 'add' : 'subtract';
       const powerUpInfo = getPowerUpInfo(currentStudentId);
       const multiplier = powerUpInfo ? powerUpInfo.multiplier : 1;
       const effectiveChange = Math.round(change * multiplier);
@@ -2852,7 +2807,7 @@
       student.points = Math.max(0, (student.points || 0) + effectiveChange);
       history[currentClassId].push({
         id: generateId(),
-        type: bulkAction,
+        type: type,
         studentId: currentStudentId,
         points: effectiveChange,
         reason,
@@ -2869,7 +2824,7 @@
       renderLeaderboard();
       renderHistoryView();
       closeModal('studentPointsModal');
-      showNotification(`${bulkAction === 'add' ? 'Added' : 'Subtracted'} ${Math.abs(effectiveChange)} points`, 'success');
+      showNotification(`${type === 'add' ? 'Added' : 'Subtracted'} ${Math.abs(effectiveChange)} points`, 'success');
     }
 
     function updateReasonsList() {
@@ -2895,10 +2850,8 @@
     function selectRewardType(type, context = 'create') {
       selectedRewardType = type;
       const prefix = context === 'edit' ? 'edit' : '';
-      
       document.querySelectorAll(`#${prefix}RewardModal .reward-type-option`).forEach(opt => opt.classList.remove('active'));
       document.querySelector(`#${prefix}RewardModal [data-type="${type}"]`).classList.add('active');
-      
       const pointsGroup = document.getElementById(`${prefix}RewardPointsGroup`);
       pointsGroup.style.display = type === 'instant' ? 'none' : 'block';
     }
@@ -3528,60 +3481,21 @@
       currentUser.password = newPass;
       users[currentUser.username].password = newPass;
       saveData();
-      sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
       closeModal('changePasswordModal');
       showNotification('Password changed successfully!', 'success');
     }
 
-    // Admin functions
-    function createClassAsAdmin() {
-      const className = document.getElementById('adminClassName').value.trim();
-      const teacherUsername = document.getElementById('teacherUsername').value.trim();
-      const teacherPassword = document.getElementById('teacherPassword').value.trim();
-      if (!className || !teacherUsername || !teacherPassword) {
-        showNotification('Please fill all fields', 'error');
-        return;
-      }
-      if (users[teacherUsername]) {
-        showNotification('Username exists', 'error');
-        return;
-      }
-      const user = {
-        username: teacherUsername,
-        password: teacherPassword,
-        school: currentUser.school,
-        type: 'personal',
-        createdAt: new Date().toISOString()
-      };
-      users[teacherUsername] = user;
-      const newClass = {
-        id: generateId(),
-        name: className,
-        teacherUsername,
-        createdAt: new Date().toISOString()
-      };
-      classes.push(newClass);
-      students[newClass.id] = {};
-      rewards[newClass.id] = {};
-      history[newClass.id] = [];
-      powerups[newClass.id] = {};
-      reasons[newClass.id] = [];
-      saveData();
-      closeModal('createClassModal');
-      renderAdminClassesView();
-      showNotification('Class and teacher created!', 'success');
-    }
-
+    // Admin functions (view only)
     function renderAdminClassesView() {
-      const view = document.getElementById('admin-classesView');
+      const view = document.getElementById('admin-classesView') || document.createElement('div');
+      view.id = 'admin-classesView';
       const schoolClasses = classes.filter(c => users[c.teacherUsername]?.school === currentUser.school);
       view.innerHTML = `
         <div class="admin-header">
           <h1 class="admin-title">Classes</h1>
-          <p class="text-secondary">Manage school classes</p>
+          <p class="text-secondary">View school classes</p>
           <div class="admin-controls">
             <input type="text" class="search-input" placeholder="Search classes..." oninput="searchAdminClasses(this.value)"/>
-            <button class="btn btn-primary" onclick="openModal('createClassModal')">Create Class</button>
           </div>
         </div>
         <div class="admin-content">
@@ -3606,6 +3520,7 @@
           </div>
         </div>
       `;
+      document.querySelector('.content-area').appendChild(view);
     }
 
     function openClassDetailModal(classId) {
@@ -3628,7 +3543,6 @@
         <h3>Teacher Information</h3>
         <p>Username: ${cls.teacherUsername}</p>
         <p>Password: ${teacher.password}</p>
-        <button class="btn btn-secondary" onclick="openEditTeacherModal('${cls.teacherUsername}')">Edit Teacher</button>
         <h3 style="margin-top: 2rem;">Students</h3>
         <table class="students-table">
           <thead>
@@ -3650,53 +3564,14 @@
       openModal('classDetailModal');
     }
 
-    function openEditTeacherModal(username) {
-      currentTeacherUsername = username;
-      const teacher = users[username];
-      document.getElementById('editTeacherUsername').value = username;
-      document.getElementById('editTeacherCurrentPassword').value = teacher.password;
-      document.getElementById('editTeacherPassword').value = '';
-      document.getElementById('editTeacherConfirmPassword').value = '';
-      openModal('editTeacherModal');
-    }
-
-    function updateTeacher() {
-      const newPass = document.getElementById('editTeacherPassword').value.trim();
-      const confirmPass = document.getElementById('editTeacherConfirmPassword').value.trim();
-      if (newPass && newPass !== confirmPass) {
-        showNotification('Passwords do not match', 'error');
-        return;
-      }
-      const teacher = users[currentTeacherUsername];
-      if (newPass) {
-        teacher.password = newPass;
-      }
-      saveData();
-      closeModal('editTeacherModal');
-      showNotification('Teacher updated!', 'success');
-    }
-
-    function deleteClassFromDetail() {
-      if (!confirm('Are you sure? This will delete the class and all data.')) return;
-      classes = classes.filter(c => c.id !== currentClassId);
-      delete students[currentClassId];
-      delete rewards[currentClassId];
-      delete history[currentClassId];
-      delete powerups[currentClassId];
-      delete reasons[currentClassId];
-      saveData();
-      closeModal('classDetailModal');
-      renderAdminClassesView();
-      showNotification('Class deleted', 'success');
-    }
-
     function renderAdminTeachersView() {
-      const view = document.getElementById('admin-teachersView');
+      const view = document.getElementById('admin-teachersView') || document.createElement('div');
+      view.id = 'admin-teachersView';
       const schoolTeachers = Object.values(users).filter(u => u.type === 'personal' && u.school === currentUser.school);
       view.innerHTML = `
         <div class="admin-header">
           <h1 class="admin-title">Teachers</h1>
-          <p class="text-secondary">Manage school teachers</p>
+          <p class="text-secondary">View school teachers</p>
         </div>
         <div class="admin-content">
           <div class="admin-stats">
@@ -3711,7 +3586,6 @@
                 <th>Username</th>
                 <th>Classes</th>
                 <th>Created</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -3722,9 +3596,6 @@
                     <td>${teacher.username}</td>
                     <td>${teacherClasses.length}</td>
                     <td>${new Date(teacher.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <button class="btn btn-secondary" onclick="openEditTeacherModal('${teacher.username}')">Edit</button>
-                    </td>
                   </tr>
                 `;
               }).join('')}
@@ -3732,51 +3603,17 @@
           </table>
         </div>
       `;
-    }
-
-    function openAddEmbedModal() {
-      document.getElementById('embedName').value = '';
-      document.getElementById('embedUrl').value = '';
-      openModal('addEmbedModal');
-    }
-
-    function addEmbed() {
-      const name = document.getElementById('embedName').value.trim();
-      const url = document.getElementById('embedUrl').value.trim();
-      if (!name || !url) {
-        showNotification('Please fill all fields', 'error');
-        return;
-      }
-      if (!embeds[currentUser.school]) embeds[currentUser.school] = [];
-      embeds[currentUser.school].push({
-        id: generateId(),
-        name,
-        url
-      });
-      saveData();
-      renderAdminEmbedsView();
-      closeModal('addEmbedModal');
-      showNotification('Embed added!', 'success');
-    }
-
-    function deleteEmbed(embedId) {
-      if (!confirm('Are you sure?')) return;
-      embeds[currentUser.school] = embeds[currentUser.school].filter(e => e.id !== embedId);
-      saveData();
-      renderAdminEmbedsView();
-      showNotification('Embed deleted!', 'success');
+      document.querySelector('.content-area').appendChild(view);
     }
 
     function renderAdminEmbedsView() {
-      const view = document.getElementById('admin-embedsView');
+      const view = document.getElementById('admin-embedsView') || document.createElement('div');
+      view.id = 'admin-embedsView';
       const schoolEmbeds = embeds[currentUser.school] || [];
       view.innerHTML = `
         <div class="admin-header">
           <h1 class="admin-title">Embeds</h1>
-          <p class="text-secondary">Manage school-wide embeds</p>
-          <div class="admin-controls">
-            <button class="btn btn-primary" onclick="openAddEmbedModal()">Add Embed</button>
-          </div>
+          <p class="text-secondary">View school-wide embeds</p>
         </div>
         <div class="admin-content">
           <div id="adminEmbedsList">
@@ -3788,7 +3625,6 @@
                 </div>
                 <div class="fullscreen-controls">
                   <button class="fullscreen-button" onclick="toggleFullscreen('${embed.id}')">⛶ Fullscreen</button>
-                  <button class="btn btn-danger" onclick="deleteEmbed('${embed.id}')">Delete</button>
                 </div>
                 <iframe src="${embed.url}"></iframe>
               </div>
@@ -3796,6 +3632,7 @@
           </div>
         </div>
       `;
+      document.querySelector('.content-area').appendChild(view);
     }
 
     // Demo Mode

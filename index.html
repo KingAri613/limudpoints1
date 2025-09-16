@@ -1735,6 +1735,10 @@
           <div class="rewards-grid" id="powerupsGrid"></div>
         </div>
 
+        <!-- Admin Views -->
+        <div id="admin-classesView" style="display:none;"></div>
+        <div id="admin-teachersView" style="display:none;"></div>
+        <div id="admin-embedsView" style="display:none;"></div>
       </div>
     </main>
   </div>
@@ -1835,6 +1839,30 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('createClassModal')">Cancel</button>
         <button class="btn btn-primary" onclick="createClass()">Create Class</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Teacher Modal (Admin) -->
+  <div class="modal" id="createTeacherModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Create New Teacher</h2>
+        <button class="modal-close" onclick="closeModal('createTeacherModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="newTeacherUsername">Teacher Username</label>
+          <input type="text" class="form-input" id="newTeacherUsername" placeholder="Username for the teacher login"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newTeacherPassword">Teacher Password</label>
+          <input type="password" class="form-input" id="newTeacherPassword" placeholder="Password for the teacher login"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('createTeacherModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createTeacher()">Create Teacher</button>
       </div>
     </div>
   </div>
@@ -2224,20 +2252,28 @@
     }
 
     function loadData() {
-      const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (data) {
-        users = data.users || {};
-        classes = data.classes || [];
-        students = data.students || {};
-        rewards = data.rewards || {};
-        powerups = data.powerups || {};
-        history = data.history || {};
-        reasons = data.reasons || {};
-        embeds = data.embeds || {};
-        currentClassId = data.currentClassId;
-        if (data.currentUser) {
-          currentUser = users[data.currentUser.username];
+      try {
+        const dataString = localStorage.getItem(STORAGE_KEY);
+        if (!dataString) return;
+        const data = JSON.parse(dataString);
+        if (data) {
+          users = data.users || {};
+          classes = data.classes || [];
+          students = data.students || {};
+          rewards = data.rewards || {};
+          powerups = data.powerups || {};
+          history = data.history || {};
+          reasons = data.reasons || {};
+          embeds = data.embeds || {};
+          currentClassId = data.currentClassId;
+          if (data.currentUser && users[data.currentUser]) {
+            currentUser = users[data.currentUser];
+          }
         }
+      } catch (error) {
+        console.error("Failed to load data from localStorage", error);
+        // Optionally clear corrupted data
+        // localStorage.removeItem(STORAGE_KEY);
       }
     }
 
@@ -2246,6 +2282,7 @@
     }
 
     function sanitizeHTML(str) {
+      if (!str) return '';
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
@@ -2264,6 +2301,10 @@
 
     function closeModal(modalId) {
       document.getElementById(modalId).classList.remove('active');
+    }
+    
+    function openAboutModal() {
+        openModal('aboutModal');
     }
 
     function toggleSidebar() {
@@ -2315,6 +2356,9 @@
         error.style.display = 'block';
         return;
       }
+      // SECURITY WARNING: Storing passwords in plaintext is highly insecure.
+      // In a real-world application, passwords must be hashed using a strong
+      // algorithm (e.g., Argon2, bcrypt) on a secure server.
       users[username] = {username, password, type, school, createdAt: new Date().toISOString()};
       saveData();
       success.textContent = 'Account created! Please sign in.';
@@ -2334,6 +2378,7 @@
       }
       currentUser = users[username];
       document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('signupScreen').style.display = 'none';
       document.getElementById('appLayout').classList.add('active');
       initializeApp();
       saveData();
@@ -2342,6 +2387,7 @@
     function logout() {
       currentUser = null;
       currentClassId = null;
+      demoMode = false;
       document.getElementById('appLayout').classList.remove('active');
       document.getElementById('loginScreen').style.display = 'flex';
       saveData();
@@ -2352,29 +2398,34 @@
       document.getElementById('sidebarSchool').textContent = currentUser.school;
       document.getElementById('sidebarUserAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
       updateNavItems();
-      updateClassSelector();
+      
       if (currentUser.type === 'admin') {
         document.getElementById('classSelector').style.display = 'none';
-        document.getElementById('pageTitle').textContent = 'Admin Dashboard';
-        document.getElementById('searchInput').style.display = 'none';
-        document.getElementById('studentsView').style.display = 'none';
-        document.getElementById('leaderboardView').style.display = 'none';
-        document.getElementById('rewardsView').style.display = 'none';
-        document.getElementById('historyView').style.display = 'none';
-        document.getElementById('settingsView').style.display = 'none';
-        document.getElementById('extrasView').style.display = 'none';
-        document.getElementById('powerupsView').style.display = 'none';
+        document.querySelector('.topbar-right .btn-primary').style.display = 'none';
+        document.querySelector('.topbar-left .btn-success').style.display = 'none';
+        switchView('admin-classes');
       } else {
-        if (currentClassId) {
-          renderStudentsView();
-          renderLeaderboard();
-          renderRewardsView();
-          renderHistoryView();
-          renderSettingsView();
-          renderPowerUpsView();
-          renderExtrasView();
+        document.getElementById('classSelector').style.display = 'block';
+        document.querySelector('.topbar-right .btn-primary').style.display = 'block';
+        document.querySelector('.topbar-left .btn-success').style.display = 'block';
+        const userClasses = classes.filter(c => c.teacherUsername === currentUser.username);
+        updateClassSelector();
+        if (currentClassId && userClasses.some(c => c.id === currentClassId)) {
+          switchView('students');
+        } else if (userClasses.length > 0) {
+          currentClassId = userClasses[0].id;
+          saveData();
+          updateClassSelector();
+          switchView('students');
         } else {
-          openNewClassModal();
+          // No classes, show empty students view and prompt to create a class.
+          document.getElementById('studentsGrid').innerHTML = `
+            <div class="student-card add-student-card" onclick="openNewClassModal()">
+              <div class="add-student-icon">➕</div>
+              <div>Create Your First Class</div>
+            </div>
+          `;
+          switchView('students');
         }
       }
     }
@@ -2386,25 +2437,25 @@
         nav.innerHTML = `
           <div class="nav-section">
             <div class="nav-section-title">Admin</div>
-            <div class="nav-item" onclick="switchView('admin-classes')"><span class="nav-icon">📚</span>Classes</div>
-            <div class="nav-item" onclick="switchView('admin-teachers')"><span class="nav-icon">👩‍🏫</span>Teachers</div>
-            <div class="nav-item" onclick="switchView('admin-embeds')"><span class="nav-icon">🖥️</span>Embeds</div>
+            <a class="nav-item" onclick="switchView('admin-classes')"><span class="nav-icon">📚</span>Classes</a>
+            <a class="nav-item" onclick="switchView('admin-teachers')"><span class="nav-icon">👩‍🏫</span>Teachers</a>
+            <a class="nav-item" onclick="switchView('admin-embeds')"><span class="nav-icon">🖥️</span>Embeds</a>
           </div>
         `;
       } else {
         nav.innerHTML = `
           <div class="nav-section">
             <div class="nav-section-title">Class</div>
-            <div class="nav-item active" onclick="switchView('students')"><span class="nav-icon">👥</span>Students</div>
-            <div class="nav-item" onclick="switchView('leaderboard')"><span class="nav-icon">🏆</span>Leaderboard</div>
-            <div class="nav-item" onclick="switchView('rewards')"><span class="nav-icon">🎁</span>Rewards</div>
-            <div class="nav-item" onclick="switchView('history')"><span class="nav-icon">📜</span>History</div>
-            <div class="nav-item" onclick="switchView('powerups')"><span class="nav-icon">⚡</span>Power Ups</div>
+            <a class="nav-item active" onclick="switchView('students')"><span class="nav-icon">👥</span>Students</a>
+            <a class="nav-item" onclick="switchView('leaderboard')"><span class="nav-icon">🏆</span>Leaderboard</a>
+            <a class="nav-item" onclick="switchView('rewards')"><span class="nav-icon">🎁</span>Rewards</a>
+            <a class="nav-item" onclick="switchView('history')"><span class="nav-icon">📜</span>History</a>
+            <a class="nav-item" onclick="switchView('powerups')"><span class="nav-icon">⚡</span>Power Ups</a>
           </div>
           <div class="nav-section">
             <div class="nav-section-title">General</div>
-            <div class="nav-item" onclick="switchView('settings')"><span class="nav-icon">⚙️</span>Settings</div>
-            <div class="nav-item" onclick="switchView('extras')"><span class="nav-icon">🎮</span>Extras</div>
+            <a class="nav-item" onclick="switchView('settings')"><span class="nav-icon">⚙️</span>Settings</a>
+            <a class="nav-item" onclick="switchView('extras')"><span class="nav-icon">🎮</span>Extras</a>
           </div>
         `;
       }
@@ -2412,20 +2463,36 @@
 
     function switchView(view) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      document.querySelector(`.nav-item[onclick="switchView('${view}')"]`).classList.add('active');
-      document.querySelectorAll('.content-area > div').forEach(d => d.style.display = 'none');
-      document.getElementById('pageTitle').textContent = view.charAt(0).toUpperCase() + view.slice(1);
+      const activeNavItem = document.querySelector(`.nav-item[onclick="switchView('${view}')"]`);
+      if (activeNavItem) activeNavItem.classList.add('active');
+
+      document.querySelectorAll('.content-area > div').forEach(d => {
+          if(!d.classList.contains('bulk-actions')) d.style.display = 'none';
+      });
+      document.getElementById('pageTitle').textContent = view.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
       document.getElementById('searchInput').style.display = 'none';
+
+      const viewId = `${view}View`;
+      const viewElement = document.getElementById(viewId);
+      if (viewElement) {
+        viewElement.style.display = 'block';
+      }
+      
       if (currentUser.type === 'admin') {
-        if (view === 'admin-classes') {
-          renderAdminClassesView();
-        } else if (view === 'admin-teachers') {
-          renderAdminTeachersView();
-        } else if (view === 'admin-embeds') {
-          renderAdminEmbedsView();
-        }
+        if (view === 'admin-classes') renderAdminClassesView();
+        else if (view === 'admin-teachers') renderAdminTeachersView();
+        else if (view === 'admin-embeds') renderAdminEmbedsView();
       } else {
-        document.getElementById(`${view}View`).style.display = 'block';
+        // Teacher-specific view rendering/updates
+        if (currentClassId) {
+            renderStudentsView();
+            renderLeaderboard();
+            renderRewardsView();
+            renderHistoryView();
+            renderSettingsView();
+            renderPowerUpsView();
+            renderExtrasView();
+        }
         if (view === 'students') {
           document.getElementById('searchInput').style.display = 'block';
           document.getElementById('pageTitle').textContent = 'Students';
@@ -2443,20 +2510,17 @@
         option.textContent = cls.name;
         selector.appendChild(option);
       });
-      selector.value = currentClassId || (userClasses[0] ? userClasses[0].id : '');
-      if (!currentClassId && userClasses[0]) {
+      if (currentClassId) {
+        selector.value = currentClassId;
+      } else if (userClasses.length > 0) {
         currentClassId = userClasses[0].id;
+        selector.value = currentClassId;
       }
       selector.onchange = () => {
         currentClassId = selector.value;
         saveData();
-        renderStudentsView();
-        renderLeaderboard();
-        renderRewardsView();
-        renderHistoryView();
-        renderSettingsView();
-        renderPowerUpsView();
-        renderExtrasView();
+        // The switchView will trigger all necessary re-renders
+        switchView('students');
       };
     }
 
@@ -2480,58 +2544,13 @@
       currentClassId = newClass.id;
       saveData();
       updateClassSelector();
-      renderStudentsView();
+      switchView('students');
       closeModal('newClassModal');
       showNotification('Class created!', 'success');
     }
 
-    function openCreateClassModal() {
-      document.getElementById('adminClassName').value = '';
-      document.getElementById('teacherUsername').value = '';
-      document.getElementById('teacherPassword').value = '';
-      openModal('createClassModal');
-    }
-
-    function createClass() {
-      const className = document.getElementById('adminClassName').value.trim();
-      const teacherUsername = document.getElementById('teacherUsername').value.trim();
-      const teacherPassword = document.getElementById('teacherPassword').value.trim();
-      if (!className || !teacherUsername || !teacherPassword) {
-        showNotification('Please fill in all fields', 'error');
-        return;
-      }
-      if (users[teacherUsername]) {
-        showNotification('Teacher username already exists', 'error');
-        return;
-      }
-      users[teacherUsername] = {
-        username: teacherUsername,
-        password: teacherPassword,
-        type: 'personal',
-        school: currentUser.school,
-        createdAt: new Date().toISOString()
-      };
-      const newClass = {
-        id: generateId(),
-        name: className,
-        teacherUsername
-      };
-      classes.push(newClass);
-      saveData();
-      renderAdminClassesView();
-      closeModal('createClassModal');
-      showNotification('Class and teacher created!', 'success');
-    }
-
-    function searchAdminClasses(query) {
-      const lowerQuery = query.toLowerCase();
-      document.querySelectorAll('#classesList .class-detail-card').forEach(card => {
-        const name = card.querySelector('.class-detail-title').textContent.toLowerCase();
-        card.style.display = name.includes(lowerQuery) ? 'block' : 'none';
-      });
-    }
-
     function getPowerUpInfo(studentId) {
+      if (!students[currentClassId] || !students[currentClassId][studentId]) return null;
       const student = students[currentClassId][studentId];
       if (!student.powerUp) return null;
       const now = new Date();
@@ -2548,19 +2567,29 @@
       if (!currentClassId) return;
       if (!students[currentClassId]) students[currentClassId] = {};
       if (!reasons[currentClassId]) reasons[currentClassId] = [];
+      if (!history[currentClassId]) history[currentClassId] = [];
       updateReasonsList();
       const classStudents = Object.values(students[currentClassId]);
       const grid = document.getElementById('studentsGrid');
       const list = document.getElementById('studentsList');
       const compact = document.getElementById('studentsCompact');
-      grid.innerHTML = '';
+      
+      const addCardHTML = `
+        <div class="student-card add-student-card" onclick="openAddStudentModal()">
+          <div class="add-student-icon">➕</div>
+          <div>Add New Student</div>
+        </div>
+      `;
+      grid.innerHTML = addCardHTML; // Start with the add card
       list.innerHTML = '';
       compact.innerHTML = '';
+
       classStudents.forEach(student => {
         const powerUpInfo = getPowerUpInfo(student.id);
         const multiplierBadge = powerUpInfo ? `<span style="background: var(--warning-color); color: var(--surface); padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem; margin-left: 0.5rem;">x${powerUpInfo.multiplier}</span>` : '';
         const selectedClass = selectedStudents.has(student.id) ? 'selected' : '';
         const avatar = student.photo ? `<img src="${student.photo}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
+        
         const gridItem = `
           <div class="student-card ${selectedClass}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openStudentPointsModal('${student.id}')`}">
             <div class="student-actions">
@@ -2595,22 +2624,16 @@
             <div class="compact-points">${student.points} pts${multiplierBadge}</div>
           </div>
         `;
-        grid.insertAdjacentHTML('beforeend', gridItem);
+        grid.insertAdjacentHTML('afterbegin', gridItem); // Prepend to keep 'add' card at the end
         list.insertAdjacentHTML('beforeend', listItem);
         compact.insertAdjacentHTML('beforeend', compactItem);
       });
-      grid.insertAdjacentHTML('beforeend', `
-        <div class="student-card add-student-card" onclick="openAddStudentModal()">
-          <div class="add-student-icon">➕</div>
-          <div>Add New Student</div>
-        </div>
-      `);
       onSearchChange();
     }
 
     function switchStudentView(event, view) {
       document.querySelectorAll('.view-option').forEach(opt => opt.classList.remove('active'));
-      event.target.classList.add('active');
+      event.currentTarget.classList.add('active');
       document.getElementById('studentsGrid').style.display = view === 'grid' ? 'grid' : 'none';
       document.getElementById('studentsList').style.display = view === 'list' ? 'flex' : 'none';
       document.getElementById('studentsCompact').style.display = view === 'compact' ? 'grid' : 'none';
@@ -2632,6 +2655,7 @@
       document.getElementById('initialPoints').value = '0';
       document.getElementById('studentPhoto').value = '';
       document.getElementById('photoPreview').style.display = 'none';
+      document.getElementById('photoPreview').querySelector('img').src = '';
       openModal('addStudentModal');
     }
 
@@ -2711,11 +2735,13 @@
       document.getElementById('editStudentName').value = student.name;
       const preview = document.getElementById('editPhotoPreview');
       const img = document.getElementById('editPreviewImg');
+      document.getElementById('editStudentPhoto').value = '';
       if (student.photo) {
         img.src = student.photo;
         preview.style.display = 'block';
       } else {
         preview.style.display = 'none';
+        img.src = '';
       }
       openModal('editStudentModal');
     }
@@ -2757,6 +2783,19 @@
       renderLeaderboard();
       closeModal('editStudentModal');
       showNotification('Student deleted', 'success');
+    }
+    
+    function copyAllStudentNames() {
+      if (!currentClassId || !students[currentClassId]) {
+        showNotification('No students to copy.', 'warning');
+        return;
+      }
+      const studentNames = Object.values(students[currentClassId]).map(s => s.name).join('\n');
+      navigator.clipboard.writeText(studentNames).then(() => {
+        showNotification('All student names copied to clipboard!', 'success');
+      }, () => {
+        showNotification('Failed to copy names.', 'error');
+      });
     }
 
     function enterBulkMode() {
@@ -2802,7 +2841,7 @@
       const change = bulkAction === 'add' ? points : -points;
       selectedStudents.forEach(studentId => {
         const powerUpInfo = getPowerUpInfo(studentId);
-        const multiplier = powerUpInfo ? powerUpInfo.multiplier : 1;
+        const multiplier = (bulkAction === 'add' && powerUpInfo) ? powerUpInfo.multiplier : 1;
         const effectiveChange = Math.round(change * multiplier);
         const student = students[currentClassId][studentId];
         student.points = Math.max(0, (student.points || 0) + effectiveChange);
@@ -2847,7 +2886,7 @@
       }
       const type = change > 0 ? 'add' : 'subtract';
       const powerUpInfo = getPowerUpInfo(currentStudentId);
-      const multiplier = powerUpInfo ? powerUpInfo.multiplier : 1;
+      const multiplier = (change > 0 && powerUpInfo) ? powerUpInfo.multiplier : 1;
       const effectiveChange = Math.round(change * multiplier);
       const student = students[currentClassId][currentStudentId];
       student.points = Math.max(0, (student.points || 0) + effectiveChange);
@@ -2875,7 +2914,9 @@
 
     function updateReasonsList() {
       const datalist = document.getElementById('reasonsList');
-      datalist.innerHTML = reasons[currentClassId].map(r => `<option value="${sanitizeHTML(r)}">`).join('');
+      if (reasons[currentClassId]) {
+        datalist.innerHTML = reasons[currentClassId].map(r => `<option value="${sanitizeHTML(r)}">`).join('');
+      }
     }
 
     function onSearchChange() {
@@ -2888,7 +2929,7 @@
       const currentSelector = selectors[currentView];
       document.querySelectorAll(currentSelector).forEach(item => {
         const name = item.querySelector('.student-name, .student-list-name, .compact-name').textContent.toLowerCase();
-        item.style.display = name.includes(query) ? '' : 'none';
+        item.style.display = name.includes(query) ? '' : 'flex'; // Use flex for list/compact for proper display
       });
     }
 
@@ -2896,8 +2937,9 @@
     function selectRewardType(type, context = 'create') {
       selectedRewardType = type;
       const prefix = context === 'edit' ? 'edit' : '';
-      document.querySelectorAll(`#${prefix}RewardModal .reward-type-option`).forEach(opt => opt.classList.remove('active'));
-      document.querySelector(`#${prefix}RewardModal [data-type="${type}"]`).classList.add('active');
+      const modalId = context === 'edit' ? 'editRewardModal' : 'createRewardModal';
+      document.querySelectorAll(`#${modalId} .reward-type-option`).forEach(opt => opt.classList.remove('active'));
+      document.querySelector(`#${modalId} [data-type="${type}"]`).classList.add('active');
       const pointsGroup = document.getElementById(`${prefix}RewardPointsGroup`);
       pointsGroup.style.display = type === 'instant' ? 'none' : 'block';
     }
@@ -3055,7 +3097,7 @@
         ${reward.type !== 'instant' ? `<p>Requires ${reward.pointsRequired} points</p>` : ''}
         <div class="form-group">
           <label class="form-label">Select Students</label>
-          <button class="btn btn-secondary" onclick="toggleSelectAll()">Select All / Deselect All</button>
+          <button class="btn btn-secondary mb-2" onclick="toggleSelectAll()">Select All / Deselect All</button>
           <div class="multi-select-list">
             ${Object.values(students[currentClassId]).map(student => `
               <div class="multi-select-option">
@@ -3076,10 +3118,12 @@
       const reward = rewards[currentClassId][currentRewardId];
       if (!reward || studentIds.length === 0) return;
       let successCount = 0;
+      let failCount = 0;
       studentIds.forEach(studentId => {
         const student = students[currentClassId][studentId];
         if (reward.type !== 'instant') {
           if (student.points < reward.pointsRequired) {
+            failCount++;
             return; // Skip if not enough points
           }
         }
@@ -3124,7 +3168,11 @@
       renderLeaderboard();
       renderHistoryView();
       closeModal('claimRewardModal');
-      showNotification(`${successCount} rewards claimed successfully!`, 'success');
+      let message = `${successCount} rewards claimed successfully!`;
+      if (failCount > 0) {
+        message += ` ${failCount} students had insufficient points.`
+      }
+      showNotification(message, failCount > 0 ? 'warning' : 'success');
     }
 
     // Power Up management
@@ -3234,7 +3282,7 @@
         <p>${powerup.multiplier}x points for ${powerup.duration} days</p>
         <div class="form-group">
           <label class="form-label">Select Students</label>
-          <button class="btn btn-secondary" onclick="toggleSelectAll()">Select All / Deselect All</button>
+          <button class="btn btn-secondary mb-2" onclick="toggleSelectAll()">Select All / Deselect All</button>
           <div class="multi-select-list">
             ${Object.values(students[currentClassId]).map(student => `
               <div class="multi-select-option">
@@ -3301,19 +3349,19 @@
       const historyList = document.getElementById('historyList');
       const classHistory = history[currentClassId] || [];
       historyList.innerHTML = classHistory.slice().reverse().map(entry => {
-        const student = students[currentClassId][entry.studentId] || {name: 'Unknown'};
+        const student = students[currentClassId]?.[entry.studentId] || {name: 'Unknown'};
         let actionText = '';
         if (entry.type === 'add' || entry.type === 'subtract') {
-          actionText = `${entry.type === 'add' ? '+' : '-'}${Math.abs(entry.points)} points`;
+          actionText = `${entry.points > 0 ? '+' : ''}${entry.points} points`;
           if (entry.multiplier > 1) actionText += ` (x${entry.multiplier})`;
         } else if (entry.type === 'reward_claim') {
-          const reward = rewards[currentClassId][entry.rewardId];
+          const reward = rewards[currentClassId]?.[entry.rewardId];
           actionText = `Claimed ${reward ? reward.title : 'reward'} (${entry.points ? -Math.abs(entry.points) + ' pts' : 'no deduct'})`;
         } else if (entry.type === 'instant_reward') {
-          const reward = rewards[currentClassId][entry.rewardId];
+          const reward = rewards[currentClassId]?.[entry.rewardId];
           actionText = `Received ${reward ? reward.title : 'instant reward'}`;
         } else if (entry.type === 'powerup_assign') {
-          const powerup = powerups[currentClassId][entry.powerUpId];
+          const powerup = powerups[currentClassId]?.[entry.powerUpId];
           actionText = `Assigned ${powerup ? powerup.title : 'power up'}`;
         } else if (entry.type === 'reset') {
           actionText = 'Points reset';
@@ -3333,7 +3381,7 @@
       if (!currentClassId || !history[currentClassId]) return;
       const currentClass = classes.find(c => c.id === currentClassId);
       const historyData = history[currentClassId].map(entry => {
-        const student = students[currentClassId][entry.studentId];
+        const student = students[currentClassId]?.[entry.studentId];
         return {
           date: new Date(entry.timestamp).toLocaleString(),
           student: student ? student.name : 'Unknown',
@@ -3346,8 +3394,8 @@
       const csvContent = [
         ['Date', 'Student', 'Action', 'Points', 'Reason', 'Multiplier'],
         ...historyData.map(row => [row.date, row.student, row.action, row.points, row.reason, row.multiplier])
-      ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-      const blob = new Blob([csvContent], {type: 'text/csv'});
+      ].map(row => row.map(cell => `"${(cell ?? '').toString().replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -3374,12 +3422,16 @@
       document.getElementById('totalStudents').textContent = Object.keys(students[currentClassId] || {}).length;
       document.getElementById('totalPoints').textContent = Object.values(students[currentClassId] || {}).reduce((sum, s) => sum + s.points, 0);
       const savedReasonsList = document.getElementById('savedReasonsList');
-      savedReasonsList.innerHTML = reasons[currentClassId].map((reason, index) => `
-        <div class="reason-chip">
-          <span>${sanitizeHTML(reason)}</span>
-          <button onclick="openEditReasonModal(${index})">✏️</button>
-        </div>
-      `).join('');
+      if (reasons[currentClassId]) {
+        savedReasonsList.innerHTML = reasons[currentClassId].map((reason, index) => `
+            <div class="reason-chip">
+              <span>${sanitizeHTML(reason)}</span>
+              <button onclick="openEditReasonModal(${index})">✏️</button>
+            </div>
+          `).join('');
+      } else {
+        savedReasonsList.innerHTML = '';
+      }
     }
 
     function openEditReasonModal(index) {
@@ -3438,8 +3490,8 @@
       const csvContent = [
         ['Student Name', 'Points', 'Points Rewards', 'Instant Rewards'],
         ...classStudents.map(s => [s.name, s.points, s.pointsRewards || 0, s.instantRewards || 0])
-      ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-      const blob = new Blob([csvContent], {type: 'text/csv'});
+      ].map(row => row.map(cell => `"${(cell ?? '').toString().replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -3459,21 +3511,16 @@
       delete history[currentClassId];
       delete powerups[currentClassId];
       delete reasons[currentClassId];
-      currentClassId = null;
+      const remainingClasses = classes.filter(c => c.teacherUsername === currentUser.username);
+      currentClassId = remainingClasses.length > 0 ? remainingClasses[0].id : null;
       saveData();
       updateClassSelector();
-      const remainingClasses = classes.filter(c => c.teacherUsername === currentUser.username);
-      if (remainingClasses.length > 0) {
-        currentClassId = remainingClasses[0].id;
-        document.getElementById('classSelector').value = currentClassId;
-        renderStudentsView();
+      if (currentClassId) {
+        switchView('students');
       } else {
-        document.getElementById('studentsGrid').innerHTML = `
-          <div class="student-card add-student-card" onclick="openAddStudentModal()">
-            <div class="add-student-icon">➕</div>
-            <div>Add New Student</div>
-          </div>
-        `;
+        document.getElementById('studentsGrid').innerHTML = `<div class="student-card add-student-card" onclick="openNewClassModal()"><div class="add-student-icon">➕</div><div>Create a Class</div></div>`;
+        document.getElementById('leaderboard').innerHTML = '';
+        // clear other views as well
       }
       showNotification('Class deleted successfully!', 'success');
     }
@@ -3491,7 +3538,7 @@
           <div class="fullscreen-controls">
             <button class="fullscreen-button" onclick="toggleFullscreen('${embed.id}')">⛶ Fullscreen</button>
           </div>
-          <iframe src="${embed.url}"></iframe>
+          <iframe src="${embed.url}" loading="lazy" referrerpolicy="no-referrer"></iframe>
         </div>
       `).join('');
     }
@@ -3531,17 +3578,101 @@
       showNotification('Password changed successfully!', 'success');
     }
 
-    // Admin functions (view only)
+    // Admin functions
+    function openCreateClassModal() {
+      document.getElementById('adminClassName').value = '';
+      document.getElementById('teacherUsername').value = '';
+      document.getElementById('teacherPassword').value = '';
+      openModal('createClassModal');
+    }
+
+    function createClass() {
+      const className = document.getElementById('adminClassName').value.trim();
+      const teacherUsername = document.getElementById('teacherUsername').value.trim();
+      const teacherPassword = document.getElementById('teacherPassword').value.trim();
+      if (!className || !teacherUsername || !teacherPassword) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+      }
+      if (users[teacherUsername]) {
+        showNotification('Teacher username already exists', 'error');
+        return;
+      }
+      users[teacherUsername] = {
+        username: teacherUsername,
+        password: teacherPassword, // INSECURE: Storing plaintext passwords
+        type: 'personal',
+        school: currentUser.school,
+        createdAt: new Date().toISOString()
+      };
+      const newClass = {
+        id: generateId(),
+        name: className,
+        teacherUsername
+      };
+      classes.push(newClass);
+      saveData();
+      renderAdminClassesView();
+      closeModal('createClassModal');
+      showNotification('Class and teacher created!', 'success');
+    }
+    
+    function openCreateTeacherModal() {
+      document.getElementById('newTeacherUsername').value = '';
+      document.getElementById('newTeacherPassword').value = '';
+      openModal('createTeacherModal');
+    }
+
+    function createTeacher() {
+      const teacherUsername = document.getElementById('newTeacherUsername').value.trim();
+      const teacherPassword = document.getElementById('newTeacherPassword').value.trim();
+      if (!teacherUsername || !teacherPassword) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+      }
+      if (users[teacherUsername]) {
+        showNotification('Teacher username already exists', 'error');
+        return;
+      }
+      users[teacherUsername] = {
+        username: teacherUsername,
+        password: teacherPassword, // INSECURE: Storing plaintext passwords
+        type: 'personal',
+        school: currentUser.school,
+        createdAt: new Date().toISOString()
+      };
+      saveData();
+      renderAdminTeachersView();
+      closeModal('createTeacherModal');
+      showNotification('Teacher created!', 'success');
+    }
+    
+    function searchAdminClasses(query) {
+      const lowerQuery = query.toLowerCase();
+      document.querySelectorAll('#classesList .class-detail-card').forEach(card => {
+        const name = card.querySelector('.class-detail-title').textContent.toLowerCase();
+        const teacher = card.querySelector('.class-detail-teacher').textContent.toLowerCase();
+        card.style.display = (name.includes(lowerQuery) || teacher.includes(lowerQuery)) ? 'block' : 'none';
+      });
+    }
+
+    function searchAdminTeachers(query) {
+        const lowerQuery = query.toLowerCase();
+        document.querySelectorAll('#admin-teachersView tbody tr').forEach(row => {
+            const username = row.querySelector('td:first-child').textContent.toLowerCase();
+            row.style.display = username.includes(lowerQuery) ? '' : 'none';
+        });
+    }
+
     function renderAdminClassesView() {
-      const view = document.getElementById('admin-classesView') || document.createElement('div');
-      view.id = 'admin-classesView';
+      const view = document.getElementById('admin-classesView');
       const schoolClasses = classes.filter(c => users[c.teacherUsername]?.school === currentUser.school);
       view.innerHTML = `
         <div class="admin-header">
           <h1 class="admin-title">Classes</h1>
-          <p class="text-secondary">View school classes</p>
+          <p class="text-secondary">View and manage all classes in ${sanitizeHTML(currentUser.school)}.</p>
           <div class="admin-controls">
-            <input type="text" class="search-input" placeholder="Search classes..." oninput="searchAdminClasses(this.value)"/>
+            <input type="text" class="search-input" placeholder="Search classes or teachers..." oninput="searchAdminClasses(this.value)"/>
             <button class="btn btn-primary" onclick="openCreateClassModal()">Create Class</button>
           </div>
         </div>
@@ -3549,7 +3680,7 @@
           <div class="admin-stats">
             <div class="stat-card">
               <div class="stat-value">${schoolClasses.length}</div>
-              <div class="stat-label">Classes</div>
+              <div class="stat-label">Total Classes</div>
             </div>
           </div>
           <div id="classesList">
@@ -3567,15 +3698,13 @@
           </div>
         </div>
       `;
-      document.querySelector('.content-area').appendChild(view);
     }
 
     function openClassDetailModal(classId) {
-      currentClassId = classId; // temp
       const cls = classes.find(c => c.id === classId);
       const teacher = users[cls.teacherUsername];
       const classStudents = Object.values(students[classId] || {});
-      document.getElementById('classDetailTitle').textContent = cls.name;
+      document.getElementById('classDetailTitle').textContent = `Details for ${cls.name}`;
       document.getElementById('classDetailContent').innerHTML = `
         <div class="class-stats">
           <div class="class-stat">
@@ -3588,8 +3717,8 @@
           </div>
         </div>
         <h3>Teacher Information</h3>
-        <p>Username: ${cls.teacherUsername}</p>
-        <p>Password: ${teacher.password}</p>
+        <p><strong>Username:</strong> ${cls.teacherUsername}</p>
+        <p><strong>Password:</strong> ${teacher.password} <em style="color:var(--text-secondary)">(Visible to admin)</em></p>
         <h3 style="margin-top: 2rem;">Students</h3>
         <table class="students-table">
           <thead>
@@ -3599,12 +3728,12 @@
             </tr>
           </thead>
           <tbody>
-            ${classStudents.map(s => `
+            ${classStudents.length > 0 ? classStudents.map(s => `
               <tr>
                 <td>${sanitizeHTML(s.name)}</td>
                 <td>${s.points}</td>
               </tr>
-            `).join('')}
+            `).join('') : `<tr><td colspan="2" class="text-center">No students in this class.</td></tr>`}
           </tbody>
         </table>
       `;
@@ -3612,13 +3741,12 @@
     }
 
     function renderAdminTeachersView() {
-      const view = document.getElementById('admin-teachersView') || document.createElement('div');
-      view.id = 'admin-teachersView';
+      const view = document.getElementById('admin-teachersView');
       const schoolTeachers = Object.values(users).filter(u => u.type === 'personal' && u.school === currentUser.school);
       view.innerHTML = `
         <div class="admin-header">
           <h1 class="admin-title">Teachers</h1>
-          <p class="text-secondary">View school teachers</p>
+          <p class="text-secondary">View and manage teacher accounts in ${sanitizeHTML(currentUser.school)}.</p>
           <div class="admin-controls">
             <input type="text" class="search-input" placeholder="Search teachers..." oninput="searchAdminTeachers(this.value)"/>
             <button class="btn btn-primary" onclick="openCreateTeacherModal()">Create Teacher</button>
@@ -3628,7 +3756,7 @@
           <div class="admin-stats">
             <div class="stat-card">
               <div class="stat-value">${schoolTeachers.length}</div>
-              <div class="stat-label">Teachers</div>
+              <div class="stat-label">Total Teachers</div>
             </div>
           </div>
           <table class="students-table">
@@ -3654,21 +3782,19 @@
           </table>
         </div>
       `;
-      document.querySelector('.content-area').appendChild(view);
     }
 
     function renderAdminEmbedsView() {
-      const view = document.getElementById('admin-embedsView') || document.createElement('div');
-      view.id = 'admin-embedsView';
+      const view = document.getElementById('admin-embedsView');
       const schoolEmbeds = embeds[currentUser.school] || [];
       view.innerHTML = `
         <div class="admin-header">
           <h1 class="admin-title">Embeds</h1>
-          <p class="text-secondary">View school-wide embeds</p>
+          <p class="text-secondary">View school-wide embeds available to all teachers.</p>
         </div>
         <div class="admin-content">
           <div id="adminEmbedsList">
-            ${schoolEmbeds.map(embed => `
+            ${schoolEmbeds.length > 0 ? schoolEmbeds.map(embed => `
               <div class="embed-container" id="embed-${embed.id}">
                 <div class="embed-header">
                   <h3 class="embed-title">${sanitizeHTML(embed.name)}</h3>
@@ -3677,13 +3803,12 @@
                 <div class="fullscreen-controls">
                   <button class="fullscreen-button" onclick="toggleFullscreen('${embed.id}')">⛶ Fullscreen</button>
                 </div>
-                <iframe src="${embed.url}"></iframe>
+                <iframe src="${embed.url}" loading="lazy" referrerpolicy="no-referrer"></iframe>
               </div>
-            `).join('')}
+            `).join('') : '<p>No embeds configured for this school.</p>'}
           </div>
         </div>
       `;
-      document.querySelector('.content-area').appendChild(view);
     }
 
     // Demo Mode
@@ -3702,6 +3827,7 @@
       reasons['demo1'] = [];
       embeds['Demo School'] = [{ id: 'e1', name: 'Wheel of Names', url: 'https://wheelofnames.com/' }, { id: 'e2', name: 'Online Notepad', url: 'https://www.onlinenotepad.io/' }];
       document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('signupScreen').style.display = 'none';
       document.getElementById('appLayout').classList.add('active');
       initializeApp();
       showNotification('Demo mode activated. Changes will not be saved.', 'info');

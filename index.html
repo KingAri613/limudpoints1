@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Rebbe Points - Professional Teacher Management System</title>
-  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dzlhbhuua/image/upload/c_fill,g_auto,w_32,h_32,r_max/v1730151234/Rebbe_Points_Logo_Circle_hazw7v.png"/>
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dzlhbhuua/image/upload/c_fill,g_auto,w_32,h_32/v1730151234/Rebbe_Points_Logo_Circle_hazw7v.png"/>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
    
@@ -718,13 +718,6 @@
       font-size: 0.875rem;
       color: var(--success-color);
       font-weight: 500;
-      margin-bottom: 0.5rem;
-    }
-
-    .student-instant-rewards {
-      font-size: 0.875rem;
-      color: var(--info-color);
-      font-weight: 500;
     }
 
     .student-actions {
@@ -842,6 +835,32 @@
       color: var(--primary-color);
       cursor: pointer;
       font-size: 1rem;
+    }
+    
+    .saved-reasons-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .reason-select-chip {
+      background: var(--surface-secondary);
+      color: var(--text-primary);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .reason-select-chip:hover {
+      background: var(--primary-color);
+      color: var(--surface);
+      border-color: var(--primary-dark);
     }
 
     /* Class Detail View */
@@ -1985,6 +2004,10 @@
           <label class="form-label" for="bulkReason">Reason (optional)</label>
           <input type="text" class="form-input" id="bulkReason" list="reasonsList" placeholder="Enter reason"/>
         </div>
+        <div class="form-group">
+            <label class="form-label">Saved Reasons</label>
+            <div id="bulkPointsSavedReasons" class="saved-reasons-container"></div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('bulkPointsModal')">Cancel</button>
@@ -2009,6 +2032,10 @@
           <label class="form-label" for="pointsReason">Reason (optional)</label>
           <input type="text" class="form-input" id="pointsReason" list="reasonsList" placeholder="Enter reason"/>
         </div>
+        <div class="form-group">
+            <label class="form-label">Saved Reasons</label>
+            <div id="studentPointsSavedReasons" class="saved-reasons-container"></div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('studentPointsModal')">Cancel</button>
@@ -2025,11 +2052,6 @@
         <button class="modal-close" onclick="closeModal('createRewardModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="reward-type-toggle">
-          <button class="reward-type-option active" data-type="deduct" onclick="selectRewardType('deduct')">Subtract (requires and deducts)</button>
-          <button class="reward-type-option" data-type="require" onclick="selectRewardType('require')">Require (requires but doesn't deduct)</button>
-          <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant')">Instant</button>
-        </div>
         <div class="form-group">
           <label class="form-label" for="rewardTitle">Title</label>
           <input type="text" class="form-input" id="rewardTitle" placeholder="Enter reward title"/>
@@ -2038,9 +2060,16 @@
           <label class="form-label" for="rewardDescription">Description (optional)</label>
           <textarea class="form-input" id="rewardDescription" placeholder="Enter description"></textarea>
         </div>
-        <div class="form-group" id="rewardPointsGroup">
+        <div class="form-group">
           <label class="form-label" for="rewardPoints">Points Required</label>
           <input type="number" class="form-input" id="rewardPoints" min="1"/>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Action on Claim</label>
+            <div style="display: flex; gap: 1rem;">
+              <label><input type="radio" name="rewardType" value="deduct" checked> Deduct points</label>
+              <label><input type="radio" name="rewardType" value="require"> Require points only</label>
+            </div>
         </div>
         <div class="form-group">
           <label class="form-label" for="rewardIcon">Icon (emoji, optional)</label>
@@ -2062,11 +2091,6 @@
         <button class="modal-close" onclick="closeModal('editRewardModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="reward-type-toggle">
-          <button class="reward-type-option active" data-type="deduct" onclick="selectRewardType('deduct', 'edit')">Subtract (requires and deducts)</button>
-          <button class="reward-type-option" data-type="require" onclick="selectRewardType('require', 'edit')">Require (requires but doesn't deduct)</button>
-          <button class="reward-type-option" data-type="instant" onclick="selectRewardType('instant', 'edit')">Instant</button>
-        </div>
         <div class="form-group">
           <label class="form-label" for="editRewardTitle">Title</label>
           <input type="text" class="form-input" id="editRewardTitle" placeholder="Enter reward title"/>
@@ -2075,9 +2099,16 @@
           <label class="form-label" for="editRewardDescription">Description (optional)</label>
           <textarea class="form-input" id="editRewardDescription" placeholder="Enter description"></textarea>
         </div>
-        <div class="form-group" id="editRewardPointsGroup">
+        <div class="form-group">
           <label class="form-label" for="editRewardPoints">Points Required</label>
           <input type="number" class="form-input" id="editRewardPoints" min="1"/>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Action on Claim</label>
+            <div style="display: flex; gap: 1rem;">
+              <label><input type="radio" name="editRewardType" value="deduct"> Deduct points</label>
+              <label><input type="radio" name="editRewardType" value="require"> Require points only</label>
+            </div>
         </div>
         <div class="form-group">
           <label class="form-label" for="editRewardIcon">Icon (emoji, optional)</label>
@@ -2230,7 +2261,6 @@
     let currentRewardId = '';
     let currentPowerUpId = '';
     let currentReasonIndex = '';
-    let selectedRewardType = 'deduct';
     let currentView = 'grid';
     let demoMode = false;
 
@@ -2589,6 +2619,7 @@
         const multiplierBadge = powerUpInfo ? `<span style="background: var(--warning-color); color: var(--surface); padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem; margin-left: 0.5rem;">x${powerUpInfo.multiplier}</span>` : '';
         const selectedClass = selectedStudents.has(student.id) ? 'selected' : '';
         const avatar = student.photo ? `<img src="${student.photo}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
+        const totalRewards = (student.pointsRewards || 0) + (student.instantRewards || 0);
         
         const gridItem = `
           <div class="student-card ${selectedClass}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openStudentPointsModal('${student.id}')`}">
@@ -2598,8 +2629,7 @@
             <div class="student-avatar">${avatar}</div>
             <div class="student-name">${sanitizeHTML(student.name)}</div>
             <div class="student-points">${student.points} pts${multiplierBadge}</div>
-            <div class="student-rewards">${student.pointsRewards || 0} rewards</div>
-            <div class="student-instant-rewards">${student.instantRewards || 0} instant</div>
+            <div class="student-rewards">${totalRewards} rewards claimed</div>
           </div>
         `;
         const listItem = `
@@ -2607,7 +2637,7 @@
             <div class="student-list-avatar">${avatar}</div>
             <div class="student-list-info">
               <div class="student-list-name">${sanitizeHTML(student.name)}</div>
-              <div class="student-list-details">${student.pointsRewards || 0} rewards | ${student.instantRewards || 0} instant</div>
+              <div class="student-list-details">${totalRewards} rewards claimed</div>
             </div>
             <div class="student-list-points">${student.points} pts${multiplierBadge}</div>
             <div class="student-list-actions">
@@ -2832,6 +2862,7 @@
       document.getElementById('bulkModalTitle').textContent = action === 'add' ? 'Bulk Add Points' : 'Bulk Subtract Points';
       document.getElementById('bulkSummary').textContent = `Apply to ${selectedStudents.size} selected students`;
       document.getElementById('bulkReason').value = '';
+      renderSavedReasons('bulkPointsSavedReasons', 'bulkReason');
       openModal('bulkPointsModal');
     }
 
@@ -2874,6 +2905,7 @@
       document.getElementById('studentModalTitle').textContent = 'Change Points';
       document.getElementById('pointsChange').value = 1;
       document.getElementById('pointsReason').value = '';
+      renderSavedReasons('studentPointsSavedReasons', 'pointsReason');
       openModal('studentPointsModal');
     }
 
@@ -2919,6 +2951,23 @@
       }
     }
 
+    function renderSavedReasons(containerId, inputId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      if (reasons[currentClassId]) {
+        reasons[currentClassId].forEach(reason => {
+          const chip = document.createElement('button');
+          chip.className = 'reason-select-chip';
+          chip.textContent = sanitizeHTML(reason);
+          chip.type = 'button';
+          chip.onclick = () => {
+            document.getElementById(inputId).value = reason;
+          };
+          container.appendChild(chip);
+        });
+      }
+    }
+
     function onSearchChange() {
       const query = document.getElementById('searchInput').value.toLowerCase();
       const selectors = {
@@ -2934,37 +2983,28 @@
     }
 
     // Reward management
-    function selectRewardType(type, context = 'create') {
-      selectedRewardType = type;
-      const prefix = context === 'edit' ? 'edit' : '';
-      const modalId = context === 'edit' ? 'editRewardModal' : 'createRewardModal';
-      document.querySelectorAll(`#${modalId} .reward-type-option`).forEach(opt => opt.classList.remove('active'));
-      document.querySelector(`#${modalId} [data-type="${type}"]`).classList.add('active');
-      const pointsGroup = document.getElementById(`${prefix}RewardPointsGroup`);
-      pointsGroup.style.display = type === 'instant' ? 'none' : 'block';
-    }
-
     function openCreateRewardModal() {
       document.getElementById('rewardTitle').value = '';
       document.getElementById('rewardDescription').value = '';
       document.getElementById('rewardPoints').value = '';
       document.getElementById('rewardIcon').value = '';
-      selectRewardType('deduct');
+      document.querySelector('input[name="rewardType"][value="deduct"]').checked = true;
       openModal('createRewardModal');
     }
 
     function createReward() {
       const title = document.getElementById('rewardTitle').value.trim();
       const description = document.getElementById('rewardDescription').value.trim();
-      const pointsRequired = selectedRewardType !== 'instant' ? parseInt(document.getElementById('rewardPoints').value) : 0;
+      const pointsRequired = parseInt(document.getElementById('rewardPoints').value);
       const icon = document.getElementById('rewardIcon').value;
+      const type = document.querySelector('input[name="rewardType"]:checked').value;
       
       if (!title) {
         showNotification('Please enter a reward title', 'error');
         return;
       }
       
-      if (selectedRewardType !== 'instant' && (!pointsRequired || pointsRequired < 1)) {
+      if (!pointsRequired || pointsRequired < 1) {
         showNotification('Please enter valid points required', 'error');
         return;
       }
@@ -2973,7 +3013,7 @@
         id: generateId(),
         title: title,
         description: description,
-        type: selectedRewardType,
+        type: type,
         pointsRequired: pointsRequired,
         icon: icon,
         createdAt: new Date().toISOString()
@@ -2995,23 +3035,23 @@
       document.getElementById('editRewardTitle').value = reward.title;
       document.getElementById('editRewardDescription').value = reward.description || '';
       document.getElementById('editRewardIcon').value = reward.icon || '';
-      selectRewardType(reward.type, 'edit');
-      if (reward.type !== 'instant') {
-        document.getElementById('editRewardPoints').value = reward.pointsRequired;
-      }
+      document.getElementById('editRewardPoints').value = reward.pointsRequired;
+      document.querySelector(`input[name="editRewardType"][value="${reward.type}"]`).checked = true;
       openModal('editRewardModal');
     }
 
     function updateReward() {
       const title = document.getElementById('editRewardTitle').value.trim();
       const description = document.getElementById('editRewardDescription').value.trim();
-      const pointsRequired = selectedRewardType !== 'instant' ? parseInt(document.getElementById('editRewardPoints').value) : 0;
+      const pointsRequired = parseInt(document.getElementById('editRewardPoints').value);
       const icon = document.getElementById('editRewardIcon').value;
+      const type = document.querySelector('input[name="editRewardType"]:checked').value;
+
       if (!title) {
         showNotification('Please enter a reward title', 'error');
         return;
       }
-      if (selectedRewardType !== 'instant' && (!pointsRequired || pointsRequired < 1)) {
+      if (!pointsRequired || pointsRequired < 1) {
         showNotification('Please enter valid points required', 'error');
         return;
       }
@@ -3019,7 +3059,7 @@
       if (reward) {
         reward.title = title;
         reward.description = description;
-        reward.type = selectedRewardType;
+        reward.type = type;
         reward.pointsRequired = pointsRequired;
         reward.icon = icon;
         saveData();
@@ -3039,25 +3079,27 @@
     }
 
     function renderRewardsView() {
-      if (!currentClassId || !rewards[currentClassId]) return;
+      if (!currentClassId || !rewards[currentClassId]) {
+          document.getElementById('rewardsGrid').innerHTML = '';
+          return;
+      }
       const rewardsGrid = document.getElementById('rewardsGrid');
       const classRewards = Object.values(rewards[currentClassId]);
       rewardsGrid.innerHTML = classRewards.map(reward => {
         let className = '';
         let badgeClass = '';
         let badgeText = '';
-        if (reward.type === 'instant') {
-          className = 'instant-reward';
-          badgeClass = 'instant-badge';
-          badgeText = 'Instant';
-        } else if (reward.type === 'deduct') {
+        if (reward.type === 'deduct') {
           className = 'deduct-reward';
           badgeClass = 'deduct-badge';
-          badgeText = 'Subtract';
+          badgeText = 'Points Deducted';
         } else if (reward.type === 'require') {
           className = 'require-reward';
           badgeClass = 'require-badge';
-          badgeText = 'Require';
+          badgeText = 'Points Required';
+        } else {
+          // Gracefully handle old reward types by not rendering them
+          return '';
         }
         return `
           <div class="reward-card ${className}">
@@ -3069,7 +3111,7 @@
                 <h3 class="reward-title">${reward.icon ? reward.icon + ' ' : ''}${sanitizeHTML(reward.title)}</h3>
                 ${reward.description ? `<p class="reward-description">${sanitizeHTML(reward.description)}</p>` : ''}
               </div>
-              ${reward.type !== 'instant' ? `<span class="reward-points">${reward.pointsRequired} pts</span>` : ''}
+              <span class="reward-points">${reward.pointsRequired} pts</span>
             </div>
             <div class="reward-actions">
               <button class="btn btn-primary" onclick="openClaimRewardModal('${reward.id}')">Claim for Students</button>
@@ -3094,7 +3136,7 @@
       content.innerHTML = `
         <h3>${reward.icon ? reward.icon + ' ' : ''}${sanitizeHTML(reward.title)}</h3>
         ${reward.description ? `<p>${sanitizeHTML(reward.description)}</p>` : ''}
-        ${reward.type !== 'instant' ? `<p>Requires ${reward.pointsRequired} points</p>` : ''}
+        <p>Requires ${reward.pointsRequired} points</p>
         <div class="form-group">
           <label class="form-label">Select Students</label>
           <button class="btn btn-secondary mb-2" onclick="toggleSelectAll()">Select All / Deselect All</button>
@@ -3121,15 +3163,15 @@
       let failCount = 0;
       studentIds.forEach(studentId => {
         const student = students[currentClassId][studentId];
-        if (reward.type !== 'instant') {
-          if (student.points < reward.pointsRequired) {
-            failCount++;
-            return; // Skip if not enough points
-          }
+        if (student.points < reward.pointsRequired) {
+          failCount++;
+          return; // Skip if not enough points
         }
+        
+        student.pointsRewards = (student.pointsRewards || 0) + 1;
+
         if (reward.type === 'deduct') {
           student.points -= reward.pointsRequired;
-          student.pointsRewards = (student.pointsRewards || 0) + 1;
           history[currentClassId].push({
             id: generateId(),
             type: 'reward_claim',
@@ -3140,7 +3182,6 @@
             timestamp: new Date().toISOString()
           });
         } else if (reward.type === 'require') {
-          student.pointsRewards = (student.pointsRewards || 0) + 1;
           history[currentClassId].push({
             id: generateId(),
             type: 'reward_claim',
@@ -3148,16 +3189,6 @@
             rewardId: currentRewardId,
             points: 0,
             reason: `Claimed reward: ${reward.title} (required points)`,
-            timestamp: new Date().toISOString()
-          });
-        } else {
-          student.instantRewards = (student.instantRewards || 0) + 1;
-          history[currentClassId].push({
-            id: generateId(),
-            type: 'instant_reward',
-            studentId: studentId,
-            rewardId: currentRewardId,
-            reason: `Received instant reward: ${reward.title}`,
             timestamp: new Date().toISOString()
           });
         }
@@ -3488,8 +3519,8 @@
       const currentClass = classes.find(c => c.id === currentClassId);
       const classStudents = Object.values(students[currentClassId] || {});
       const csvContent = [
-        ['Student Name', 'Points', 'Points Rewards', 'Instant Rewards'],
-        ...classStudents.map(s => [s.name, s.points, s.pointsRewards || 0, s.instantRewards || 0])
+        ['Student Name', 'Points', 'Rewards Claimed'],
+        ...classStudents.map(s => [s.name, s.points, (s.pointsRewards || 0) + (s.instantRewards || 0)])
       ].map(row => row.map(cell => `"${(cell ?? '').toString().replace(/"/g, '""')}"`).join(',')).join('\n');
       const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob);

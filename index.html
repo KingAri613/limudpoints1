@@ -75,6 +75,18 @@
     .form-group {
       margin-bottom: 1.5rem;
     }
+
+    .form-group.inline-input {
+      position: relative;
+    }
+
+    .inline-input .btn {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 0.5rem;
+    }
    
     .form-label {
       display: block;
@@ -1384,6 +1396,29 @@
     .multi-select-option:hover {
       background: var(--surface-secondary);
     }
+    
+    /* Emoji Picker Styles */
+    #emojiGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+      gap: 0.5rem;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-top: 1rem;
+    }
+
+    .emoji-item {
+      font-size: 1.5rem;
+      cursor: pointer;
+      text-align: center;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .emoji-item:hover {
+      background-color: var(--surface-secondary);
+    }
 
     /* Mobile Responsiveness */
     @media (max-width: 1024px) {
@@ -1562,7 +1597,7 @@
         <div class="sidebar-title">Rebbe Points</div>
       </div>
      
-      <nav class="sidebar-nav">
+      <nav class="sidebar-nav" id="sidebarNav">
         <!-- Dynamic nav items will be loaded here -->
       </nav>
      
@@ -1612,7 +1647,7 @@
         </div>
 
         <!-- Students View -->
-        <div id="studentsView">
+        <div id="studentsView" class="page-view" style="display:none;">
           <div class="content-header">
             <div class="view-toggle">
               <button class="view-option active" data-view="grid" onclick="switchStudentView(event, 'grid')">Grid View</button>
@@ -1650,7 +1685,7 @@
         </div>
 
         <!-- Leaderboard View -->
-        <div id="leaderboardView" style="display:none;">
+        <div id="leaderboardView" class="page-view" style="display:none;">
           <div class="content-header">
             <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Class Leaderboard</h2>
           </div>
@@ -1658,7 +1693,7 @@
         </div>
 
         <!-- Rewards View -->
-        <div id="rewardsView" style="display:none;">
+        <div id="rewardsView" class="page-view" style="display:none;">
           <div class="content-header">
             <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Class Rewards</h2>
             <div class="action-buttons">
@@ -1669,7 +1704,7 @@
         </div>
 
         <!-- History View -->
-        <div id="historyView" style="display:none;">
+        <div id="historyView" class="page-view" style="display:none;">
           <div class="content-header">
             <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Points History</h2>
             <div class="action-buttons">
@@ -1681,7 +1716,7 @@
         </div>
 
         <!-- Settings View -->
-        <div id="settingsView" style="display:none;">
+        <div id="settingsView" class="page-view" style="display:none;">
           <div class="content-header">
             <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Settings</h2>
           </div>
@@ -1736,7 +1771,7 @@
         </div>
         
         <!-- Extras View -->
-        <div id="extrasView" style="display:none;">
+        <div id="extrasView" class="page-view" style="display:none;">
           <div class="content-header">
             <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Extras</h2>
           </div>
@@ -1744,7 +1779,7 @@
         </div>
 
         <!-- Power Ups View -->
-        <div id="powerupsView" style="display:none;">
+        <div id="powerupsView" class="page-view" style="display:none;">
           <div class="content-header">
             <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Power Ups</h2>
             <div class="action-buttons">
@@ -1755,9 +1790,9 @@
         </div>
 
         <!-- Admin Views -->
-        <div id="admin-classesView" style="display:none;"></div>
-        <div id="admin-teachersView" style="display:none;"></div>
-        <div id="admin-embedsView" style="display:none;"></div>
+        <div id="admin-classesView" class="page-view" style="display:none;"></div>
+        <div id="admin-usersView" class="page-view" style="display:none;"></div>
+        <div id="admin-embedsView" class="page-view" style="display:none;"></div>
       </div>
     </main>
   </div>
@@ -1780,7 +1815,7 @@
       <div class="modal-body">
         <h3>About</h3>
         <p>Rebbe Points is a professional teacher management system designed to help teachers manage classrooms, track student points, rewards, and more.</p>
-        <p>Developed with care for educational excellence. Version 1.0.</p>
+        <p>Developed with care for educational excellence. Version 1.1.</p>
         <h3>How to Use</h3>
         <h4>Getting Started</h4>
         <p>1. Sign up or log in using your credentials.</p>
@@ -1792,12 +1827,11 @@
         <h4>Rewards and Leaderboard</h4>
         <p>- Create rewards (points-based or instant).</p>
         <p>- View leaderboard for top students.</p>
-        <h4>History and Settings</h4>
-        <p>- Track all point changes in history.</p>
-        <p>- Manage settings, reset points, or delete classes in the danger zone.</p>
         <h4>Admin Features (if applicable)</h4>
         <p>- View classes and teacher accounts.</p>
-        <p>- View embeds and school-wide data.</p>
+        <p>- Create new Admins and Teachers.</p>
+        <p>- Change teacher passwords.</p>
+        <p>- Add/Remove school-wide embedded tools in the "Extras" section.</p>
         <p>For more details, explore the sidebar navigation.</p>
       </div>
       <div class="modal-footer">
@@ -1882,6 +1916,74 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('createTeacherModal')">Cancel</button>
         <button class="btn btn-primary" onclick="createTeacher()">Create Teacher</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Admin Modal -->
+  <div class="modal" id="createAdminModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Create New Admin</h2>
+        <button class="modal-close" onclick="closeModal('createAdminModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="newAdminUsername">Admin Username</label>
+          <input type="text" class="form-input" id="newAdminUsername" placeholder="Username for the admin login"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newAdminPassword">Admin Password</label>
+          <input type="password" class="form-input" id="newAdminPassword" placeholder="Password for the admin login"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('createAdminModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createAdmin()">Create Admin</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Change Teacher Password Modal (Admin) -->
+  <div class="modal" id="changeTeacherPasswordModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="changeTeacherPasswordTitle">Change Teacher Password</h2>
+        <button class="modal-close" onclick="closeModal('changeTeacherPasswordModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="newTeacherPass">New Password</label>
+          <input type="password" class="form-input" id="newTeacherPass" placeholder="Enter new password"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('changeTeacherPasswordModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="changeTeacherPassword()">Update Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Embed Modal (Admin) -->
+  <div class="modal" id="addEmbedModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Add New Embed</h2>
+        <button class="modal-close" onclick="closeModal('addEmbedModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="embedName">Name</label>
+          <input type="text" class="form-input" id="embedName" placeholder="e.g., Wheel of Names"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="embedUrl">URL</label>
+          <input type="text" class="form-input" id="embedUrl" placeholder="https://wheelofnames.com/"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addEmbedModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addEmbed()">Add Embed</button>
       </div>
     </div>
   </div>
@@ -2071,9 +2173,10 @@
               <label><input type="radio" name="rewardType" value="require"> Require points only</label>
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group inline-input">
           <label class="form-label" for="rewardIcon">Icon (emoji, optional)</label>
           <input type="text" class="form-input" id="rewardIcon" placeholder="e.g., 🏆"/>
+          <button class="btn btn-secondary" onclick="openEmojiPicker('rewardIcon')">😀</button>
         </div>
       </div>
       <div class="modal-footer">
@@ -2110,9 +2213,10 @@
               <label><input type="radio" name="editRewardType" value="require"> Require points only</label>
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group inline-input">
           <label class="form-label" for="editRewardIcon">Icon (emoji, optional)</label>
           <input type="text" class="form-input" id="editRewardIcon" placeholder="e.g., 🏆"/>
+          <button class="btn btn-secondary" onclick="openEmojiPicker('editRewardIcon')">😀</button>
         </div>
       </div>
       <div class="modal-footer">
@@ -2241,6 +2345,21 @@
       </div>
     </div>
   </div>
+  
+  <!-- Emoji Picker Modal -->
+  <div class="modal" id="emojiPickerModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Select an Emoji</h2>
+        <button class="modal-close" onclick="closeModal('emojiPickerModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="form-input mb-4" id="emojiSearch" placeholder="Search emojis..." oninput="renderEmojiPicker()">
+        <div id="emojiGrid"></div>
+      </div>
+    </div>
+  </div>
+
 
   <script>
     const STORAGE_KEY = 'rebbePointsData';
@@ -2262,7 +2381,11 @@
     let currentPowerUpId = '';
     let currentReasonIndex = '';
     let currentView = 'grid';
+    let currentUsernameToEdit = '';
+    let emojiPickerTarget = null;
     let demoMode = false;
+    
+    const EMOJI_LIST = ['😀', '😂', '😍', '🥳', '👍', '🙏', '🚀', '⭐', '🏆', '🥇', '🎁', '🎉', '💯', '🔥', '📚', '✏️', '💡', '🍎', '🎯', '✅', '✔️', '➕', '🙌', '👏', '💪', '🧠', '👑'];
 
     function saveData() {
       if (demoMode) return;
@@ -2418,6 +2541,7 @@
       currentUser = null;
       currentClassId = null;
       demoMode = false;
+      window.location.hash = '';
       document.getElementById('appLayout').classList.remove('active');
       document.getElementById('loginScreen').style.display = 'flex';
       saveData();
@@ -2428,64 +2552,56 @@
       document.getElementById('sidebarSchool').textContent = currentUser.school;
       document.getElementById('sidebarUserAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
       updateNavItems();
-      
-      if (currentUser.type === 'admin') {
-        document.getElementById('classSelector').style.display = 'none';
-        document.querySelector('.topbar-right .btn-primary').style.display = 'none';
-        document.querySelector('.topbar-left .btn-success').style.display = 'none';
-        switchView('admin-classes');
-      } else {
-        document.getElementById('classSelector').style.display = 'block';
-        document.querySelector('.topbar-right .btn-primary').style.display = 'block';
-        document.querySelector('.topbar-left .btn-success').style.display = 'block';
-        const userClasses = classes.filter(c => c.teacherUsername === currentUser.username);
-        updateClassSelector();
-        if (currentClassId && userClasses.some(c => c.id === currentClassId)) {
-          switchView('students');
-        } else if (userClasses.length > 0) {
-          currentClassId = userClasses[0].id;
-          saveData();
-          updateClassSelector();
-          switchView('students');
+      router(); // Call router to load the correct initial view
+    }
+
+    // Router
+    function router() {
+        const hash = window.location.hash.substring(2); // Remove #/
+        let defaultView;
+
+        if (currentUser.type === 'admin') {
+            defaultView = 'admin-classes';
+            document.getElementById('classSelector').style.display = 'none';
+            document.querySelector('.topbar-right .btn-primary').style.display = 'none';
+            document.querySelector('.topbar-left .btn-success').style.display = 'none';
         } else {
-          // No classes, show empty students view and prompt to create a class.
-          document.getElementById('studentsGrid').innerHTML = `
-            <div class="student-card add-student-card" onclick="openNewClassModal()">
-              <div class="add-student-icon">➕</div>
-              <div>Create Your First Class</div>
-            </div>
-          `;
-          switchView('students');
+            defaultView = 'students';
+            document.getElementById('classSelector').style.display = 'block';
+            document.querySelector('.topbar-right .btn-primary').style.display = 'block';
+            document.querySelector('.topbar-left .btn-success').style.display = 'block';
+            updateClassSelector();
         }
-      }
+        
+        switchView(hash || defaultView);
     }
 
     function updateNavItems() {
-      const nav = document.querySelector('.sidebar-nav');
+      const nav = document.getElementById('sidebarNav');
       nav.innerHTML = '';
       if (currentUser.type === 'admin') {
         nav.innerHTML = `
           <div class="nav-section">
             <div class="nav-section-title">Admin</div>
-            <a class="nav-item" onclick="switchView('admin-classes')"><span class="nav-icon">📚</span>Classes</a>
-            <a class="nav-item" onclick="switchView('admin-teachers')"><span class="nav-icon">👩‍🏫</span>Teachers</a>
-            <a class="nav-item" onclick="switchView('admin-embeds')"><span class="nav-icon">🖥️</span>Embeds</a>
+            <a href="#/admin-classes" class="nav-item" data-view="admin-classes"><span class="nav-icon">📚</span>Classes</a>
+            <a href="#/admin-users" class="nav-item" data-view="admin-users"><span class="nav-icon">👩‍🏫</span>Users</a>
+            <a href="#/admin-embeds" class="nav-item" data-view="admin-embeds"><span class="nav-icon">🖥️</span>Embeds</a>
           </div>
         `;
       } else {
         nav.innerHTML = `
           <div class="nav-section">
             <div class="nav-section-title">Class</div>
-            <a class="nav-item active" onclick="switchView('students')"><span class="nav-icon">👥</span>Students</a>
-            <a class="nav-item" onclick="switchView('leaderboard')"><span class="nav-icon">🏆</span>Leaderboard</a>
-            <a class="nav-item" onclick="switchView('rewards')"><span class="nav-icon">🎁</span>Rewards</a>
-            <a class="nav-item" onclick="switchView('history')"><span class="nav-icon">📜</span>History</a>
-            <a class="nav-item" onclick="switchView('powerups')"><span class="nav-icon">⚡</span>Power Ups</a>
+            <a href="#/students" class="nav-item" data-view="students"><span class="nav-icon">👥</span>Students</a>
+            <a href="#/leaderboard" class="nav-item" data-view="leaderboard"><span class="nav-icon">🏆</span>Leaderboard</a>
+            <a href="#/rewards" class="nav-item" data-view="rewards"><span class="nav-icon">🎁</span>Rewards</a>
+            <a href="#/history" class="nav-item" data-view="history"><span class="nav-icon">📜</span>History</a>
+            <a href="#/powerups" class="nav-item" data-view="powerups"><span class="nav-icon">⚡</span>Power Ups</a>
           </div>
           <div class="nav-section">
             <div class="nav-section-title">General</div>
-            <a class="nav-item" onclick="switchView('settings')"><span class="nav-icon">⚙️</span>Settings</a>
-            <a class="nav-item" onclick="switchView('extras')"><span class="nav-icon">🎮</span>Extras</a>
+            <a href="#/settings" class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span>Settings</a>
+            <a href="#/extras" class="nav-item" data-view="extras"><span class="nav-icon">🎮</span>Extras</a>
           </div>
         `;
       }
@@ -2493,12 +2609,10 @@
 
     function switchView(view) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      const activeNavItem = document.querySelector(`.nav-item[onclick="switchView('${view}')"]`);
+      const activeNavItem = document.querySelector(`.nav-item[data-view="${view}"]`);
       if (activeNavItem) activeNavItem.classList.add('active');
 
-      document.querySelectorAll('.content-area > div').forEach(d => {
-          if(!d.classList.contains('bulk-actions')) d.style.display = 'none';
-      });
+      document.querySelectorAll('.page-view').forEach(d => d.style.display = 'none');
       document.getElementById('pageTitle').textContent = view.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
       document.getElementById('searchInput').style.display = 'none';
 
@@ -2510,7 +2624,7 @@
       
       if (currentUser.type === 'admin') {
         if (view === 'admin-classes') renderAdminClassesView();
-        else if (view === 'admin-teachers') renderAdminTeachersView();
+        else if (view === 'admin-users') renderAdminUsersView();
         else if (view === 'admin-embeds') renderAdminEmbedsView();
       } else {
         // Teacher-specific view rendering/updates
@@ -2522,7 +2636,17 @@
             renderSettingsView();
             renderPowerUpsView();
             renderExtrasView();
+        } else if (view === 'students') {
+            // Handle case where teacher has no classes yet
+            document.getElementById('studentsGrid').innerHTML = `
+                <div class="student-card add-student-card" onclick="openNewClassModal()">
+                    <div class="add-student-icon">➕</div>
+                    <div>Create Your First Class</div>
+                </div>`;
+            document.getElementById('studentsList').innerHTML = '';
+            document.getElementById('studentsCompact').innerHTML = '';
         }
+
         if (view === 'students') {
           document.getElementById('searchInput').style.display = 'block';
           document.getElementById('pageTitle').textContent = 'Students';
@@ -2550,7 +2674,7 @@
         currentClassId = selector.value;
         saveData();
         // The switchView will trigger all necessary re-renders
-        switchView('students');
+        router();
       };
     }
 
@@ -3546,13 +3670,7 @@
       currentClassId = remainingClasses.length > 0 ? remainingClasses[0].id : null;
       saveData();
       updateClassSelector();
-      if (currentClassId) {
-        switchView('students');
-      } else {
-        document.getElementById('studentsGrid').innerHTML = `<div class="student-card add-student-card" onclick="openNewClassModal()"><div class="add-student-icon">➕</div><div>Create a Class</div></div>`;
-        document.getElementById('leaderboard').innerHTML = '';
-        // clear other views as well
-      }
+      router();
       showNotification('Class deleted successfully!', 'success');
     }
 
@@ -3673,9 +3791,61 @@
         createdAt: new Date().toISOString()
       };
       saveData();
-      renderAdminTeachersView();
+      renderAdminUsersView();
       closeModal('createTeacherModal');
       showNotification('Teacher created!', 'success');
+    }
+
+    function openCreateAdminModal() {
+      document.getElementById('newAdminUsername').value = '';
+      document.getElementById('newAdminPassword').value = '';
+      openModal('createAdminModal');
+    }
+
+    function createAdmin() {
+        const username = document.getElementById('newAdminUsername').value.trim();
+        const password = document.getElementById('newAdminPassword').value.trim();
+        if (!username || !password) {
+            showNotification('Please fill in all fields', 'error');
+            return;
+        }
+        if (users[username]) {
+            showNotification('Username already exists', 'error');
+            return;
+        }
+        users[username] = {
+            username,
+            password,
+            type: 'admin',
+            school: currentUser.school,
+            createdAt: new Date().toISOString()
+        };
+        saveData();
+        renderAdminUsersView();
+        closeModal('createAdminModal');
+        showNotification('Admin created successfully!', 'success');
+    }
+
+    function openChangeTeacherPasswordModal(username) {
+        currentUsernameToEdit = username;
+        document.getElementById('changeTeacherPasswordTitle').textContent = `Change Password for ${username}`;
+        document.getElementById('newTeacherPass').value = '';
+        openModal('changeTeacherPasswordModal');
+    }
+
+    function changeTeacherPassword() {
+        const newPassword = document.getElementById('newTeacherPass').value.trim();
+        if (!newPassword) {
+            showNotification('Password cannot be empty', 'error');
+            return;
+        }
+        if (users[currentUsernameToEdit]) {
+            users[currentUsernameToEdit].password = newPassword;
+            saveData();
+            renderAdminUsersView();
+            closeModal('changeTeacherPasswordModal');
+            showNotification(`Password for ${currentUsernameToEdit} updated!`, 'success');
+        }
     }
     
     function searchAdminClasses(query) {
@@ -3687,9 +3857,9 @@
       });
     }
 
-    function searchAdminTeachers(query) {
+    function searchAdminUsers(query) {
         const lowerQuery = query.toLowerCase();
-        document.querySelectorAll('#admin-teachersView tbody tr').forEach(row => {
+        document.querySelectorAll('#admin-usersView tbody tr').forEach(row => {
             const username = row.querySelector('td:first-child').textContent.toLowerCase();
             row.style.display = username.includes(lowerQuery) ? '' : 'none';
         });
@@ -3771,44 +3941,47 @@
       openModal('classDetailModal');
     }
 
-    function renderAdminTeachersView() {
-      const view = document.getElementById('admin-teachersView');
-      const schoolTeachers = Object.values(users).filter(u => u.type === 'personal' && u.school === currentUser.school);
+    function renderAdminUsersView() {
+      const view = document.getElementById('admin-usersView');
+      const schoolUsers = Object.values(users).filter(u => u.school === currentUser.school);
+      const schoolAdmins = schoolUsers.filter(u => u.type === 'admin');
+      const schoolTeachers = schoolUsers.filter(u => u.type === 'personal');
       view.innerHTML = `
         <div class="admin-header">
-          <h1 class="admin-title">Teachers</h1>
-          <p class="text-secondary">View and manage teacher accounts in ${sanitizeHTML(currentUser.school)}.</p>
+          <h1 class="admin-title">Users</h1>
+          <p class="text-secondary">View and manage all user accounts in ${sanitizeHTML(currentUser.school)}.</p>
           <div class="admin-controls">
-            <input type="text" class="search-input" placeholder="Search teachers..." oninput="searchAdminTeachers(this.value)"/>
+            <input type="text" class="search-input" placeholder="Search users..." oninput="searchAdminUsers(this.value)"/>
             <button class="btn btn-primary" onclick="openCreateTeacherModal()">Create Teacher</button>
+            <button class="btn btn-info" onclick="openCreateAdminModal()">Create Admin</button>
           </div>
         </div>
         <div class="admin-content">
-          <div class="admin-stats">
-            <div class="stat-card">
-              <div class="stat-value">${schoolTeachers.length}</div>
-              <div class="stat-label">Total Teachers</div>
-            </div>
-          </div>
-          <table class="students-table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Classes</th>
-                <th>Created</th>
-              </tr>
-            </thead>
+          <h3 class="mb-4">Administrators (${schoolAdmins.length})</h3>
+          <table class="students-table mb-4">
+            <thead><tr><th>Username</th><th>Created</th></tr></thead>
             <tbody>
-              ${schoolTeachers.map(teacher => {
-                const teacherClasses = classes.filter(c => c.teacherUsername === teacher.username);
-                return `
-                  <tr>
-                    <td>${teacher.username}</td>
-                    <td>${teacherClasses.length}</td>
-                    <td>${new Date(teacher.createdAt).toLocaleDateString()}</td>
-                  </tr>
-                `;
-              }).join('')}
+              ${schoolAdmins.map(admin => `
+                <tr>
+                  <td>${admin.username} ${admin.username === currentUser.username ? '(You)' : ''}</td>
+                  <td>${new Date(admin.createdAt).toLocaleDateString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <h3 class="mb-4">Teachers (${schoolTeachers.length})</h3>
+          <table class="students-table">
+            <thead><tr><th>Username</th><th>Classes</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${schoolTeachers.map(teacher => `
+                <tr>
+                  <td>${teacher.username}</td>
+                  <td>${classes.filter(c => c.teacherUsername === teacher.username).length}</td>
+                  <td>${new Date(teacher.createdAt).toLocaleDateString()}</td>
+                  <td><button class="btn btn-secondary" onclick="openChangeTeacherPasswordModal('${teacher.username}')">Change Password</button></td>
+                </tr>
+              `).join('')}
             </tbody>
           </table>
         </div>
@@ -3821,26 +3994,87 @@
       view.innerHTML = `
         <div class="admin-header">
           <h1 class="admin-title">Embeds</h1>
-          <p class="text-secondary">View school-wide embeds available to all teachers.</p>
+          <p class="text-secondary">Manage school-wide embeds available to all teachers in the "Extras" section.</p>
+          <div class="admin-controls">
+             <button class="btn btn-primary" onclick="openAddEmbedModal()">Add Embed</button>
+          </div>
         </div>
         <div class="admin-content">
           <div id="adminEmbedsList">
             ${schoolEmbeds.length > 0 ? schoolEmbeds.map(embed => `
-              <div class="embed-container" id="embed-${embed.id}">
-                <div class="embed-header">
-                  <h3 class="embed-title">${sanitizeHTML(embed.name)}</h3>
-                  <div class="embed-url">${sanitizeHTML(embed.url)}</div>
-                </div>
-                <div class="fullscreen-controls">
-                  <button class="fullscreen-button" onclick="toggleFullscreen('${embed.id}')">⛶ Fullscreen</button>
+              <div class="embed-container" id="embed-admin-${embed.id}">
+                <div class="embed-header" style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <h3 class="embed-title">${sanitizeHTML(embed.name)}</h3>
+                    <div class="embed-url">${sanitizeHTML(embed.url)}</div>
+                  </div>
+                  <button class="btn btn-danger" onclick="deleteEmbed('${embed.id}')">Delete</button>
                 </div>
                 <iframe src="${embed.url}" loading="lazy" referrerpolicy="no-referrer"></iframe>
               </div>
-            `).join('') : '<p>No embeds configured for this school.</p>'}
+            `).join('') : '<p>No embeds configured for this school. Add one to get started!</p>'}
           </div>
         </div>
       `;
     }
+    
+    function openAddEmbedModal() {
+        document.getElementById('embedName').value = '';
+        document.getElementById('embedUrl').value = '';
+        openModal('addEmbedModal');
+    }
+
+    function addEmbed() {
+        const name = document.getElementById('embedName').value.trim();
+        const url = document.getElementById('embedUrl').value.trim();
+        if (!name || !url) {
+            showNotification('Please fill in both name and URL', 'error');
+            return;
+        }
+        if (!embeds[currentUser.school]) {
+            embeds[currentUser.school] = [];
+        }
+        embeds[currentUser.school].push({ id: generateId(), name, url });
+        saveData();
+        renderAdminEmbedsView();
+        closeModal('addEmbedModal');
+        showNotification('Embed added successfully!', 'success');
+    }
+
+    function deleteEmbed(embedId) {
+        if (!confirm('Are you sure you want to delete this embed?')) return;
+        if (embeds[currentUser.school]) {
+            embeds[currentUser.school] = embeds[currentUser.school].filter(e => e.id !== embedId);
+            saveData();
+            renderAdminEmbedsView();
+            showNotification('Embed deleted successfully!', 'success');
+        }
+    }
+
+    // Emoji Picker
+    function openEmojiPicker(targetInputId) {
+        emojiPickerTarget = document.getElementById(targetInputId);
+        document.getElementById('emojiSearch').value = '';
+        renderEmojiPicker();
+        openModal('emojiPickerModal');
+    }
+    
+    function renderEmojiPicker() {
+        const query = document.getElementById('emojiSearch').value;
+        const grid = document.getElementById('emojiGrid');
+        const filteredEmojis = EMOJI_LIST.filter(emoji => emoji.includes(query));
+        grid.innerHTML = filteredEmojis.map(emoji => 
+            `<div class="emoji-item" onclick="selectEmoji('${emoji}')">${emoji}</div>`
+        ).join('');
+    }
+
+    function selectEmoji(emoji) {
+        if (emojiPickerTarget) {
+            emojiPickerTarget.value = emoji;
+        }
+        closeModal('emojiPickerModal');
+    }
+
 
     // Demo Mode
     function startDemoMode() {
@@ -3867,6 +4101,7 @@
     // Event Listeners
     document.getElementById('signupBtn').addEventListener('click', signup);
     document.getElementById('loginBtn').addEventListener('click', login);
+    window.addEventListener('hashchange', router);
 
     // Init
     function init() {

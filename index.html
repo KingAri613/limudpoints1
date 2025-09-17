@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Rebbe Points - Professional Teacher Management System</title>
-  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dzlhbhuua/image/upload/c_fill,g_auto,w_32,h_32/v1730151234/Rebbe_Points_Logo_Circle_hazw7v.png"/>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231ab5f4'/%3E%3Cg transform='translate(50,50)' fill='%23ffc107'%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(0)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(15)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(30)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(45)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(60)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(75)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(90)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(105)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(120)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(135)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(150)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(165)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(180)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(195)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(210)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(225)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(240)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(255)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(270)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(285)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(300)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(315)'/%3E%3Cpath d='M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z' transform='rotate(330)'/%3E%3Cpath d='M -2,-32 C -2,-32 0,-38 2,-32 Z' transform='rotate(345)'/%3E%3C/g%3E%3Ccircle cx='50' cy='50' r='34' fill='%231495c7'/%3E%3Ccircle cx='50' cy='50' r='32' fill='%231ab5f4'/%3E%3Ctext x='50' y='46' font-family='Inter,sans-serif' font-weight='700' font-size='13px' fill='white' text-anchor='middle'%3Erebbe%3C/text%3E%3Ctext x='50' y='62' font-family='Inter,sans-serif' font-weight='700' font-size='13px' fill='white' text-anchor='middle'%3Epoints%3C/text%3E%3Cpath d='M 47 68 L 53 68 L 50 73 Z' fill='white' opacity='0.5'/%3E%3C/svg%3E"/>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
    
@@ -284,9 +284,10 @@
       height: 40px;
       border-radius: 50%;
       overflow: hidden;
+      flex-shrink: 0;
     }
    
-    .sidebar-logo img {
+    .sidebar-logo svg {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -1262,9 +1263,9 @@
       border-radius: 12px;
       padding: 1rem 1.5rem;
       box-shadow: var(--shadow-lg);
-      z-index: 1100;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
+      z-index: 9999;
+      transform: translateX(calc(100% + 2rem));
+      transition: transform 0.4s ease-in-out;
       max-width: 400px;
     }
 
@@ -1472,6 +1473,10 @@
         right: 1rem;
         left: 1rem;
         max-width: none;
+        transform: translateY(-150%);
+      }
+      .notification.show {
+        transform: translateY(0);
       }
 
       .admin-stats {
@@ -1592,7 +1597,7 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo">
-          <img src="https://res.cloudinary.com/dzlhbhuua/image/upload/c_fill,g_auto,w_40,h_40,r_max/v1730151234/Rebbe_Points_Logo_Circle_hazw7v.png" alt="Rebbe Points Logo"/>
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="Rebbe Points Logo"><rect width="100" height="100" fill="#1ab5f4"/><g transform="translate(50,50)" fill="#ffc107"><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(0)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(15)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(30)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(45)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(60)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(75)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(90)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(105)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(120)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(135)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(150)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(165)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(180)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(195)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(210)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(225)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(240)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(255)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(270)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(285)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(300)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(315)"/><path d="M -2.5,-32 C -2.5,-32 0,-42 2.5,-32 Z" transform="rotate(330)"/><path d="M -2,-32 C -2,-32 0,-38 2,-32 Z" transform="rotate(345)"/></g><circle cx="50" cy="50" r="34" fill="#1495c7"/><circle cx="50" cy="50" r="32" fill="#1ab5f4"/><text x="50" y="46" font-family="Inter,sans-serif" font-weight="700" font-size="13px" fill="white" text-anchor="middle">rebbe</text><text x="50" y="62" font-family="Inter,sans-serif" font-weight="700" font-size="13px" fill="white" text-anchor="middle">points</text><path d="M 47 68 L 53 68 L 50 73 Z" fill="white" opacity="0.5"/></svg>
         </div>
         <div class="sidebar-title">Rebbe Points</div>
       </div>
@@ -1609,9 +1614,6 @@
             <p id="sidebarSchool">School Name</p>
           </div>
         </div>
-        <button class="btn btn-secondary" onclick="openChangePasswordModal()" style="width: 100%; font-size: 0.875rem; margin-bottom: 1rem;">
-          <span>🔑</span> Change Password
-        </button>
         <button class="btn btn-warning" onclick="logout()" style="width: 100%; font-size: 0.875rem;">
           <span>🚪</span> Sign Out
         </button>
@@ -2513,6 +2515,15 @@
       // In a real-world application, passwords must be hashed using a strong
       // algorithm (e.g., Argon2, bcrypt) on a secure server.
       users[username] = {username, password, type, school, createdAt: new Date().toISOString()};
+      
+      // Add default embeds for the school if it's new
+      if (!embeds[school]) {
+        embeds[school] = [
+          { id: generateId(), name: 'Wheel of Names', url: 'https://wheelofnames.com/' },
+          { id: generateId(), name: 'Online Notepad', url: 'https://www.onlinenotepad.io/' }
+        ];
+      }
+      
       saveData();
       success.textContent = 'Account created! Please sign in.';
       success.style.display = 'block';
@@ -3885,7 +3896,10 @@
             </div>
           </div>
           <div id="classesList">
-            ${schoolClasses.map(cls => `
+            ${schoolClasses.map(cls => {
+              const classStudents = Object.values(students[cls.id] || {});
+              const totalPoints = classStudents.reduce((sum, s) => sum + s.points, 0);
+              return `
               <div class="class-detail-card">
                 <div class="class-detail-header">
                   <div>
@@ -3894,8 +3908,18 @@
                   </div>
                   <button class="btn btn-secondary" onclick="openClassDetailModal('${cls.id}')">View Details</button>
                 </div>
+                <div class="class-stats" style="margin-bottom: 0;">
+                  <div class="class-stat">
+                    <div class="class-stat-value">${classStudents.length}</div>
+                    <div class="class-stat-label">Students</div>
+                  </div>
+                  <div class="class-stat">
+                    <div class="class-stat-value">${totalPoints}</div>
+                    <div class="class-stat-label">Total Points</div>
+                  </div>
+                </div>
               </div>
-            `).join('')}
+            `}).join('')}
           </div>
         </div>
       `;

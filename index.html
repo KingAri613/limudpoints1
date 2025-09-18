@@ -1422,6 +1422,24 @@
       background-color: var(--surface-secondary);
     }
 
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(30, 41, 59, 0.5);
+      z-index: 99;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0s 0.3s linear;
+    }
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.3s ease;
+    }
+
     /* Tablet and Mobile Responsiveness */
     @media (max-width: 1024px) {
       .hamburger-menu {
@@ -1432,6 +1450,7 @@
       }
       .sidebar {
         transform: translateX(-100%);
+        width: 320px;
       }
      
       .sidebar.mobile-open {
@@ -1501,6 +1520,10 @@
       }
       .auth-title, .admin-title, .modal-title {
         font-size: 1.5rem;
+      }
+
+      .sidebar {
+        width: 100%;
       }
 
       .topbar {
@@ -1709,6 +1732,8 @@
         </button>
       </div>
     </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
@@ -2554,6 +2579,7 @@
 
     function toggleSidebar() {
       document.getElementById('sidebar').classList.toggle('mobile-open');
+      document.getElementById('sidebarOverlay').classList.toggle('active');
     }
 
     function toggleSidebarCollapse() {
@@ -2692,6 +2718,12 @@
         switchView(hash || defaultView);
     }
 
+    function closeMobileSidebar() {
+        if (window.innerWidth <= 1024 && document.getElementById('sidebar').classList.contains('mobile-open')) {
+            toggleSidebar();
+        }
+    }
+
     function updateNavItems() {
       const nav = document.getElementById('sidebarNav');
       nav.innerHTML = '';
@@ -2699,25 +2731,25 @@
         nav.innerHTML = `
           <div class="nav-section">
             <div class="nav-section-title">Admin</div>
-            <a href="#/admin-classes" class="nav-item" data-view="admin-classes"><span class="nav-icon">📚</span>Classes</a>
-            <a href="#/admin-users" class="nav-item" data-view="admin-users"><span class="nav-icon">👩‍🏫</span>Users</a>
-            <a href="#/admin-embeds" class="nav-item" data-view="admin-embeds"><span class="nav-icon">🖥️</span>Embeds</a>
+            <a href="#/admin-classes" class="nav-item" data-view="admin-classes" onclick="closeMobileSidebar()"><span class="nav-icon">📚</span>Classes</a>
+            <a href="#/admin-users" class="nav-item" data-view="admin-users" onclick="closeMobileSidebar()"><span class="nav-icon">👩‍🏫</span>Users</a>
+            <a href="#/admin-embeds" class="nav-item" data-view="admin-embeds" onclick="closeMobileSidebar()"><span class="nav-icon">🖥️</span>Embeds</a>
           </div>
         `;
       } else {
         nav.innerHTML = `
           <div class="nav-section">
             <div class="nav-section-title">Class</div>
-            <a href="#/students" class="nav-item" data-view="students"><span class="nav-icon">👥</span>Students</a>
-            <a href="#/leaderboard" class="nav-item" data-view="leaderboard"><span class="nav-icon">🏆</span>Leaderboard</a>
-            <a href="#/rewards" class="nav-item" data-view="rewards"><span class="nav-icon">🎁</span>Rewards</a>
-            <a href="#/history" class="nav-item" data-view="history"><span class="nav-icon">📜</span>History</a>
-            <a href="#/powerups" class="nav-item" data-view="powerups"><span class="nav-icon">⚡</span>Power Ups</a>
+            <a href="#/students" class="nav-item" data-view="students" onclick="closeMobileSidebar()"><span class="nav-icon">👥</span>Students</a>
+            <a href="#/leaderboard" class="nav-item" data-view="leaderboard" onclick="closeMobileSidebar()"><span class="nav-icon">🏆</span>Leaderboard</a>
+            <a href="#/rewards" class="nav-item" data-view="rewards" onclick="closeMobileSidebar()"><span class="nav-icon">🎁</span>Rewards</a>
+            <a href="#/history" class="nav-item" data-view="history" onclick="closeMobileSidebar()"><span class="nav-icon">📜</span>History</a>
+            <a href="#/powerups" class="nav-item" data-view="powerups" onclick="closeMobileSidebar()"><span class="nav-icon">⚡</span>Power Ups</a>
           </div>
           <div class="nav-section">
             <div class="nav-section-title">General</div>
-            <a href="#/settings" class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span>Settings</a>
-            <a href="#/extras" class="nav-item" data-view="extras"><span class="nav-icon">🎮</span>Extras</a>
+            <a href="#/settings" class="nav-item" data-view="settings" onclick="closeMobileSidebar()"><span class="nav-icon">⚙️</span>Settings</a>
+            <a href="#/extras" class="nav-item" data-view="extras" onclick="closeMobileSidebar()"><span class="nav-icon">🎮</span>Extras</a>
           </div>
         `;
       }

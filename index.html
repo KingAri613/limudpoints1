@@ -1674,7 +1674,6 @@
       <p class="text-center">Don't have an account? <a href="#" class="auth-switch" onclick="showSignup()">Create one here</a></p>
     </div>
     <a href="#" class="corner-button about-button btn btn-info" onclick="openAboutModal()">About & How to Use</a>
-    <a href="#" class="corner-button demo-button btn btn-info" onclick="openModal('demoModal')">Try Demo</a>
   </div>
 
   <!-- Signup Screen -->
@@ -1726,7 +1725,6 @@
       <p class="text-center">Already have an account? <a href="#" class="auth-switch" onclick="showLogin()">Sign in here</a></p>
     </div>
     <a href="#" class="corner-button about-button btn btn-info" onclick="openAboutModal()">About & How to Use</a>
-    <a href="#" class="corner-button demo-button btn btn-info" onclick="openModal('demoModal')">Try Demo</a>
   </div>
 
   <!-- Main App Layout -->
@@ -1773,7 +1771,6 @@
         </div>
         <div class="topbar-right">
           <input type="text" class="search-input" id="searchInput" placeholder="Search students..." oninput="onSearchChange()"/>
-          <button class="btn btn-warning" id="switchDemoViewBtn" onclick="switchDemoView()" style="display: none;">Switch View</button>
           <button class="btn btn-primary" onclick="openNewClassModal()">New Class</button>
         </div>
       </header>
@@ -1983,20 +1980,6 @@
     </div>
   </div>
 
-  <!-- Demo Mode Selection Modal -->
-  <div class="modal" id="demoModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Choose Demo Experience</h2>
-        <button class="modal-close" onclick="closeModal('demoModal')">&times;</button>
-      </div>
-      <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
-        <button class="btn btn-primary btn-full" onclick="startDemoMode('teacher')">👨‍🏫 Launch Teacher Demo</button>
-        <button class="btn btn-info btn-full" onclick="startDemoMode('admin')">🏫 Launch Admin Demo</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Change Password Modal -->
   <div class="modal" id="changePasswordModal">
     <div class="modal-content">
@@ -2005,22 +1988,11 @@
         <button class="modal-close" onclick="closeModal('changePasswordModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="currentPassword">Current Password</label>
-          <input type="password" class="form-input" id="currentPassword" placeholder="Enter current password"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="newPassword">New Password</label>
-          <input type="password" class="form-input" id="newPassword" placeholder="Enter new password"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="confirmNewPassword">Confirm New Password</label>
-          <input type="password" class="form-input" id="confirmNewPassword" placeholder="Confirm new password"/>
-        </div>
+        <p>To change your password, a password reset link will be sent to your email address.</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('changePasswordModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="changePassword()">Change Password</button>
+        <button class="btn btn-primary" onclick="changePassword()">Send Reset Link</button>
       </div>
     </div>
   </div>
@@ -2524,8 +2496,8 @@
     // ===================================================================================
     // 1. Go to your Supabase project > Project Settings > API.
     // 2. Copy your "Project URL" and "anon" (public) key and paste them here.
-    const SUPABASE_URL = https://nqudumexocyxdbpzpyhd.supabase.co; 
-    const SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xdWR1bWV4b2N5eGRicHpweWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyOTY4NTcsImV4cCI6MjA3Mzg3Mjg1N30.Sa3N0O0cHwA8r-S86XiHfk9LRAPIjxO7QrLwzspBPDA;
+    const SUPABASE_URL = 'https://nqudumexocyxdbpzpyhd.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xdWR1bWV4b2N5eGRicHpweWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyOTY4NTcsImV4cCI6MjA3Mzg3Mjg1N30.Sa3N0O0cHwA8r-S86XiHfk9LRAPIjxO7QrLwzspBPDA';
     // ===================================================================================
 
     const { createClient } = supabase;
@@ -2558,7 +2530,6 @@
     let currentView = 'grid';
     let currentUsernameToEdit = '';
     let emojiPickerTarget = null;
-    let demoMode = false; // Demo mode is not compatible with Supabase backend
     
     const EMOJI_LIST = ['😀', '😂', '😍', '🥳', '👍', '🙏', '🚀', '⭐', '🏆', '🥇', '🎁', '🎉', '💯', '🔥', '📚', '✏️', '💡', '🍎', '🎯', '✅', '✔️', '➕', '🙌', '👏', '💪', '🧠', '👑'];
 
@@ -4165,17 +4136,10 @@
 
     // Change Password (for logged-in user)
     function openChangePasswordModal() {
-      document.getElementById('currentPassword').value = '';
-      document.getElementById('newPassword').value = '';
-      document.getElementById('confirmNewPassword').value = '';
       openModal('changePasswordModal');
     }
 
     async function changePassword() {
-        // Supabase has a different flow for this. The best practice is to
-        // send a password reset link. Updating it directly with the old password
-        // is less common and can be complex to implement securely client-side.
-        // For this app, we'll guide the user to a standard password reset flow.
         const { data, error } = await db.auth.resetPasswordForEmail(currentUser.email);
         if (error) {
             showNotification(`Error: ${error.message}`, 'error');
@@ -4203,29 +4167,24 @@
         });
         return { pointsEarned, pointsSpent, rewardsClaimed };
     }
-
-    function openCreateClassModal() {
-      // This is now just for personal teachers. Admin flow is different.
-      openNewClassModal();
-    }
     
-    function openCreateTeacherModal() {
-      document.getElementById('newTeacherUsername').value = '';
-      document.getElementById('newTeacherPassword').value = '';
-      openModal('createTeacherModal');
+    function createClass() {
+      showNotification('This function is not available.', 'info');
     }
 
-    async function createTeacher() {
-      // Admin creating a teacher is a complex auth flow. For simplicity, we'll
-      // instruct the admin to have teachers sign up themselves with the correct school name.
+    function createTeacher() {
       showNotification('Please have the teacher sign up with your school name.', 'info');
       closeModal('createTeacherModal');
     }
 
-    async function createAdmin() {
-      // Similar to creating a teacher, this is complex from client-side.
+    function createAdmin() {
       showNotification('Please have the new admin sign up with your school name and select the Admin account type.', 'info');
       closeModal('createAdminModal');
+    }
+    
+    function changeTeacherPassword() {
+        showNotification('To reset a user\'s password, please use the Supabase dashboard under Authentication > Users.', 'info');
+        closeModal('changeTeacherPasswordModal');
     }
 
     function openChangeTeacherPasswordModal(userId) {

@@ -38,6 +38,16 @@
       overflow-x: hidden;
     }
 
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
     /* Authentication Screen */
     .auth-screen {
       min-height: 100vh;
@@ -1325,7 +1335,7 @@
       border-radius: 0;
     }
 
-    .fullscreen-controls {
+    .embed-controls {
       position: absolute;
       top: 0.5rem;
       right: 0.5rem;
@@ -1334,7 +1344,7 @@
       z-index: 2001;
     }
 
-    .fullscreen-button {
+    .embed-button {
       background: var(--surface);
       border: 1px solid var(--border-color);
       border-radius: 4px;
@@ -1345,7 +1355,7 @@
       transition: all 0.2s;
     }
 
-    .fullscreen-button:hover {
+    .embed-button:hover {
       background: var(--surface-secondary);
     }
 
@@ -1353,6 +1363,15 @@
       padding: 1rem;
       border-bottom: 1px solid var(--border-color);
       background: var(--surface-secondary);
+    }
+
+    .embed-header .btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    .embed-header-content {
+        flex-grow: 1;
     }
 
     .embed-title {
@@ -1629,6 +1648,7 @@
   </style>
 </head>
 <body>
+  <canvas id="confettiCanvas"></canvas>
 
   <!-- Login Screen -->
   <div class="auth-screen" id="loginScreen">
@@ -2800,6 +2820,79 @@
           document.getElementById('pageTitle').textContent = 'Students';
         }
       }
+
+      if (view === 'leaderboard') {
+        triggerConfetti();
+      }
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confettiCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const colors = ["#1ab5f4", "#1495c7", "#ffc107", "#ffffff", "#059669"];
+        let confetti = [];
+        const confettiCount = 150;
+
+        for (let i = 0; i < confettiCount; i++) {
+            confetti.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height, // Start above the screen
+                radius: Math.random() * 5 + 2,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rotation: Math.random() * 360,
+                speed: Math.random() * 3 + 2,
+                wind: Math.random() * 2 - 1,
+                opacity: 1
+            });
+        }
+
+        let animationFrameId;
+
+        function drawConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            confetti.forEach((piece, index) => {
+                piece.y += piece.speed;
+                piece.x += piece.wind;
+                piece.rotation += piece.speed / 2;
+                piece.opacity -= 0.005; // Fade out
+
+                if (piece.y > canvas.height || piece.opacity <= 0) {
+                    confetti.splice(index, 1);
+                } else {
+                    ctx.save();
+                    ctx.translate(piece.x, piece.y);
+                    ctx.rotate(piece.rotation * Math.PI / 180);
+                    ctx.fillStyle = piece.color;
+                    ctx.globalAlpha = piece.opacity;
+                    ctx.fillRect(-piece.radius, -piece.radius / 2, piece.radius * 2, piece.radius);
+                    ctx.restore();
+                }
+            });
+
+            if (confetti.length > 0) {
+                animationFrameId = requestAnimationFrame(drawConfetti);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Final clear
+            }
+        }
+        
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+        }
+        
+        drawConfetti();
+        
+        setTimeout(() => {
+            cancelAnimationFrame(animationFrameId);
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }, 5000); // Stop after 5 seconds to be safe
     }
 
     function updateClassSelector() {
@@ -3826,18 +3919,49 @@
     function renderExtrasView() {
       const embedsList = document.getElementById('embedsList');
       const schoolEmbeds = embeds[currentUser.school] || [];
-      embedsList.innerHTML = schoolEmbeds.map(embed => `
+      embedsList.innerHTML = schoolEmbeds.map(embed => {
+        let importButton = '';
+        if (embed.name.toLowerCase().includes('wheel of names')) {
+            importButton = `<button class="btn btn-success" onclick="importToWheel('${embed.id}')">Import Class Names</button>`;
+        }
+        return `
         <div class="embed-container" id="embed-${embed.id}">
-          <div class="embed-header">
-            <h3 class="embed-title">${sanitizeHTML(embed.name)}</h3>
-            <div class="embed-url">${sanitizeHTML(embed.url)}</div>
-          </div>
-          <div class="fullscreen-controls">
-            <button class="fullscreen-button" onclick="toggleFullscreen('${embed.id}')">⛶ Fullscreen</button>
+          <div class="embed-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div class="embed-header-content">
+              <h3 class="embed-title">${sanitizeHTML(embed.name)}</h3>
+              <div class="embed-url">${sanitizeHTML(embed.url)}</div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              ${importButton}
+              <button class="embed-button" onclick="toggleFullscreen('${embed.id}')">⛶ Fullscreen</button>
+            </div>
           </div>
           <iframe src="${embed.url}" loading="lazy" referrerpolicy="no-referrer"></iframe>
         </div>
-      `).join('');
+      `}).join('');
+    }
+
+    function importToWheel(embedId) {
+        if (!currentClassId || !students[currentClassId]) {
+            showNotification('No class or students to import.', 'warning');
+            return;
+        }
+        const studentNames = Object.values(students[currentClassId]).map(s => s.name).join('\n');
+        if (!studentNames) {
+            showNotification('No student names to import.', 'warning');
+            return;
+        }
+        
+        // Wheel of Names uses a URL parameter 'names' with entries separated by newlines.
+        const newUrl = `https://wheelofnames.com/?names=${encodeURIComponent(studentNames)}`;
+        
+        const iframe = document.querySelector(`#embed-${embedId} iframe`);
+        if (iframe) {
+            iframe.src = newUrl;
+            showNotification('Student names imported into Wheel of Names!', 'success');
+        } else {
+            showNotification('Could not find the Wheel of Names embed.', 'error');
+        }
     }
 
     function toggleFullscreen(embedId) {

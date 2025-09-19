@@ -1646,6 +1646,7 @@
     .hidden { display: none; }
     .relative { position: relative; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <canvas id="confettiCanvas"></canvas>
@@ -1659,8 +1660,8 @@
       <div class="error-message" id="loginError"></div>
      
       <div class="form-group">
-        <label class="form-label" for="loginUsername">Username</label>
-        <input type="text" class="form-input" id="loginUsername" placeholder="Enter your username"/>
+        <label class="form-label" for="loginEmail">Email</label>
+        <input type="email" class="form-input" id="loginEmail" placeholder="Enter your email"/>
       </div>
      
       <div class="form-group">
@@ -1697,8 +1698,12 @@
       </div>
      
       <div class="form-group">
+        <label class="form-label" for="signupEmail">Email</label>
+        <input type="email" class="form-input" id="signupEmail" placeholder="Your login email"/>
+      </div>
+      <div class="form-group">
         <label class="form-label" for="signupUsername">Username</label>
-        <input type="text" class="form-input" id="signupUsername" placeholder="Choose a username"/>
+        <input type="text" class="form-input" id="signupUsername" placeholder="Your display name"/>
       </div>
      
       <div class="form-group">
@@ -1714,11 +1719,6 @@
       <div class="form-group">
         <label class="form-label" for="signupSchool">School Name</label>
         <input type="text" class="form-input" id="signupSchool" placeholder="Enter your school name"/>
-      </div>
-
-      <div class="form-group" id="adminEmailGroup" style="display: none;">
-        <label class="form-label" for="signupEmail">Email Address (Optional)</label>
-        <input type="email" class="form-input" id="signupEmail" placeholder="Enter your email"/>
       </div>
      
       <button class="btn btn-primary btn-full" id="signupBtn">Create Account</button>
@@ -2519,76 +2519,59 @@
 
 
   <script>
-    const STORAGE_KEY = 'limudPointsData';
+    // ===================================================================================
+    // SUPABASE CONFIGURATION
+    // ===================================================================================
+    // 1. Go to your Supabase project > Project Settings > API.
+    // 2. Copy your "Project URL" and "anon" (public) key and paste them here.
+    const SUPABASE_URL = https://nqudumexocyxdbpzpyhd.supabase.co; 
+    const SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xdWR1bWV4b2N5eGRicHpweWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyOTY4NTcsImV4cCI6MjA3Mzg3Mjg1N30.Sa3N0O0cHwA8r-S86XiHfk9LRAPIjxO7QrLwzspBPDA;
+    // ===================================================================================
+
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ===================================================================================
+    // APPLICATION STATE (IN-MEMORY CACHE)
+    // ===================================================================================
     let currentUser = null;
-    let currentClassId = null;
+    let currentClassId = localStorage.getItem('limud_currentClassId'); // Persist last selected class
+    
+    // Data is now fetched from Supabase and stored here for quick access
     let classes = [];
-    let students = {};
-    let rewards = {};
-    let powerups = {};
-    let history = {};
-    let reasons = {};
-    let embeds = {};
-    let users = {};
+    let students = [];
+    let rewards = [];
+    let powerups = [];
+    let history = [];
+    let reasons = [];
+    let embeds = [];
+    let users = [];
+
+    // UI State
     let bulkMode = false;
     let selectedStudents = new Set();
     let bulkAction = '';
     let currentStudentId = '';
     let currentRewardId = '';
     let currentPowerUpId = '';
-    let currentReasonIndex = '';
+    let currentReasonId = '';
     let currentView = 'grid';
     let currentUsernameToEdit = '';
     let emojiPickerTarget = null;
-    let demoMode = false;
+    let demoMode = false; // Demo mode is not compatible with Supabase backend
     
     const EMOJI_LIST = ['😀', '😂', '😍', '🥳', '👍', '🙏', '🚀', '⭐', '🏆', '🥇', '🎁', '🎉', '💯', '🔥', '📚', '✏️', '💡', '🍎', '🎯', '✅', '✔️', '➕', '🙌', '👏', '💪', '🧠', '👑'];
 
-    function saveData() {
-      if (demoMode) return;
-      const data = {
-        users,
-        classes,
-        students,
-        rewards,
-        powerups,
-        history,
-        reasons,
-        embeds,
-        currentUser: currentUser ? currentUser.username : null,
-        currentClassId
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function loadData() {
-      try {
-        const dataString = localStorage.getItem(STORAGE_KEY);
-        if (!dataString) return;
-        const data = JSON.parse(dataString);
-        if (data) {
-          users = data.users || {};
-          classes = data.classes || [];
-          students = data.students || {};
-          rewards = data.rewards || {};
-          powerups = data.powerups || {};
-          history = data.history || {};
-          reasons = data.reasons || {};
-          embeds = data.embeds || {};
-          currentClassId = data.currentClassId;
-          if (data.currentUser && users[data.currentUser]) {
-            currentUser = users[data.currentUser];
-          }
-        }
-      } catch (error) {
-        console.error("Failed to load data from localStorage", error);
-        // Optionally clear corrupted data
-        // localStorage.removeItem(STORAGE_KEY);
-      }
-    }
+    // ===================================================================================
+    // HELPER & UTILITY FUNCTIONS
+    // ===================================================================================
 
     function generateId() {
-      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+      // UUIDs are now generated by the database, this is just a fallback if needed client-side
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
     }
 
     function sanitizeHTML(str) {
@@ -2603,6 +2586,16 @@
       setTimeout(() => {
         notification.classList.remove('show');
       }, 3000);
+    }
+    
+    function setLoading(btn, isLoading) {
+        if (isLoading) {
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner"></span> Loading...`;
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = btn.dataset.originalText;
+        }
     }
 
     function openModal(modalId) {
@@ -2626,6 +2619,10 @@
       document.getElementById('sidebar').classList.toggle('collapsed');
       document.getElementById('mainContent').classList.toggle('collapsed');
     }
+    
+    // ===================================================================================
+    // AUTHENTICATION
+    // ===================================================================================
 
     function showLogin() {
       document.getElementById('signupScreen').style.display = 'none';
@@ -2640,107 +2637,186 @@
     function selectAccountType(type) {
       document.querySelectorAll('.account-type-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelector(`.account-type-btn[data-type="${type}"]`).classList.add('active');
-      document.getElementById('adminEmailGroup').style.display = type === 'admin' ? 'block' : 'none';
     }
 
-    function signup() {
+    async function signup() {
+      const btn = document.getElementById('signupBtn');
+      btn.disabled = true;
+
       const type = document.querySelector('.account-type-btn.active').dataset.type;
+      const email = document.getElementById('signupEmail').value.trim();
       const username = document.getElementById('signupUsername').value.trim();
       const password = document.getElementById('signupPassword').value.trim();
       const confirmPassword = document.getElementById('signupConfirmPassword').value.trim();
       const school = document.getElementById('signupSchool').value.trim();
-      const email = document.getElementById('signupEmail').value.trim();
-      const error = document.getElementById('signupError');
-      const success = document.getElementById('signupSuccess');
-      error.style.display = 'none';
-      success.style.display = 'none';
-      if (!username || !password || !school) {
-        error.textContent = 'Please fill in all fields';
-        error.style.display = 'block';
+      
+      const errorEl = document.getElementById('signupError');
+      const successEl = document.getElementById('signupSuccess');
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      if (!email || !username || !password || !school) {
+        errorEl.textContent = 'Please fill in all required fields';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
         return;
       }
       if (password !== confirmPassword) {
-        error.textContent = 'Passwords do not match';
-        error.style.display = 'block';
+        errorEl.textContent = 'Passwords do not match';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
         return;
       }
-      if (users[username]) {
-        error.textContent = 'Username already exists';
-        error.style.display = 'block';
+
+      // Step 1: Create the user in Supabase Auth
+      const { data: authData, error: authError } = await db.auth.signUp({
+        email: email,
+        password: password
+      });
+
+      if (authError) {
+        errorEl.textContent = authError.message;
+        errorEl.style.display = 'block';
+        btn.disabled = false;
         return;
       }
-      // SECURITY WARNING: Storing passwords in plaintext is highly insecure.
-      // In a real-world application, passwords must be hashed using a strong
-      // algorithm (e.g., Argon2, bcrypt) on a secure server.
-      users[username] = {username, password, type, school, createdAt: new Date().toISOString()};
-      if (type === 'admin' && email) {
-        users[username].email = email;
-      }
+
+      // Step 2: Create the user profile in the 'profiles' table
+      const { error: profileError } = await db.from('profiles').insert({
+        id: authData.user.id,
+        username: username,
+        email: email,
+        school: school,
+        type: type
+      });
       
-      // Add default embeds for the school if it's new
-      if (!embeds[school]) {
-        embeds[school] = [
-          { id: generateId(), name: 'Wheel of Names', url: 'https://wheelofnames.com/' },
-          { id: generateId(), name: 'Online Notepad', url: 'https://www.onlinenotepad.io/' }
-        ];
+      if (profileError) {
+        // This is a tricky state. The auth user exists, but the profile failed.
+        // For a production app, you'd want a cleanup mechanism. Here, we'll just show the error.
+        errorEl.textContent = `Could not create user profile: ${profileError.message}`;
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        return;
       }
-      
-      saveData();
-      success.textContent = 'Account created! Please sign in.';
-      success.style.display = 'block';
-      setTimeout(showLogin, 2000);
+
+      successEl.textContent = 'Account created! Please check your email to confirm your account and then sign in.';
+      successEl.style.display = 'block';
+      setTimeout(showLogin, 4000);
+      btn.disabled = false;
     }
 
-    function login() {
-      const username = document.getElementById('loginUsername').value.trim();
+    async function login() {
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+
+      const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
-      const error = document.getElementById('loginError');
-      error.style.display = 'none';
-      if (!users[username] || users[username].password !== password) {
-        error.textContent = 'Invalid username or password';
-        error.style.display = 'block';
+      const errorEl = document.getElementById('loginError');
+      errorEl.style.display = 'none';
+
+      const { error } = await db.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        errorEl.textContent = error.message;
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+      }
+      // The onAuthStateChange listener will handle successful login
+    }
+
+    async function logout() {
+      await db.auth.signOut();
+      // The onAuthStateChange listener will handle UI updates
+      // Clear local state
+      currentUser = null;
+      classes = [];
+      students = [];
+      rewards = [];
+      powerups = [];
+      history = [];
+      reasons = [];
+      embeds = [];
+      users = [];
+      localStorage.removeItem('limud_currentClassId');
+    }
+
+    // ===================================================================================
+    // INITIALIZATION & ROUTING
+    // ===================================================================================
+
+    async function initializeApp(user) {
+      // 1. Fetch user profile
+      const { data, error } = await db.from('profiles').select('*').eq('id', user.id).single();
+      if (error || !data) {
+        showNotification('Could not load your profile. Please try again.', 'error');
+        logout();
         return;
       }
-      currentUser = users[username];
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('signupScreen').style.display = 'none';
-      document.getElementById('appLayout').classList.add('active');
-      initializeApp();
-      saveData();
-    }
+      currentUser = data;
 
-    function logout() {
-      // Fully reset the application state to prevent demo data from persisting in memory.
-      currentUser = null;
-      currentClassId = null;
-      demoMode = false;
-      document.getElementById('switchDemoViewBtn').style.display = 'none';
-      classes = [];
-      students = {};
-      rewards = {};
-      powerups = {};
-      history = {};
-      reasons = {};
-      embeds = {};
-      // Note: `users` is not cleared here, as it will be reloaded from localStorage.
-
-      window.location.hash = '';
-      document.getElementById('appLayout').classList.remove('active');
-      document.getElementById('loginScreen').style.display = 'flex';
-
-      // Reload the original data from localStorage. This purges any demo data from memory.
-      loadData(); 
-      
-      // Now save the clean, logged-out state.
-      saveData();
-    }
-
-    function initializeApp() {
+      // 2. Set up basic UI elements
       document.getElementById('sidebarUsername').textContent = currentUser.username;
       document.getElementById('sidebarSchool').textContent = currentUser.school;
       document.getElementById('sidebarUserAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
+      
+      // 3. Fetch all necessary data for the user
+      await fetchAllData();
+      
+      // 4. Update UI based on fetched data
       updateNavItems();
-      router(); // Call router to load the correct initial view
+      
+      // 5. Route to the correct view
+      router(); 
+    }
+    
+    async function fetchAllData() {
+        if (!currentUser) return;
+        
+        // Fetch all data in parallel for performance
+        const promises = [
+            db.from('classes').select('*').eq('school', currentUser.school),
+            db.from('embeds').select('*').eq('school', currentUser.school)
+        ];
+        
+        if (currentUser.type === 'admin') {
+            promises.push(db.from('profiles').select('*').eq('school', currentUser.school));
+        }
+        
+        const [classesRes, embedsRes, usersRes] = await Promise.all(promises);
+
+        if (classesRes.error) showNotification(`Error fetching classes: ${classesRes.error.message}`, 'error');
+        else classes = classesRes.data;
+
+        if (embedsRes.error) showNotification(`Error fetching embeds: ${embedsRes.error.message}`, 'error');
+        else embeds = embedsRes.data;
+        
+        if (usersRes?.error) showNotification(`Error fetching users: ${usersRes.error.message}`, 'error');
+        else if (usersRes) users = usersRes.data;
+
+        // Fetch class-specific data if a class is selected
+        if (currentClassId) {
+            await fetchClassData(currentClassId);
+        }
+    }
+
+    async function fetchClassData(classId) {
+        if (!classId) return;
+        const [studentsRes, rewardsRes, powerupsRes, historyRes, reasonsRes] = await Promise.all([
+            db.from('students').select('*').eq('class_id', classId),
+            db.from('rewards').select('*').eq('class_id', classId),
+            db.from('powerups').select('*').eq('class_id', classId),
+            db.from('history').select('*').eq('class_id', classId),
+            db.from('reasons').select('*').eq('class_id', classId),
+        ]);
+        
+        students = studentsRes.data || [];
+        rewards = rewardsRes.data || [];
+        powerups = powerupsRes.data || [];
+        history = historyRes.data || [];
+        reasons = reasonsRes.data || [];
     }
 
     // Router
@@ -2789,14 +2865,13 @@
             <a href="#/students" class="nav-item" data-view="students" onclick="closeMobileSidebar()"><span class="nav-icon">👥</span>Students</a>
             <a href="#/leaderboard" class="nav-item" data-view="leaderboard" onclick="closeMobileSidebar()"><span class="nav-icon">🏆</span>Leaderboard</a>
             <a href="#/rewards" class="nav-item" data-view="rewards" onclick="closeMobileSidebar()"><span class="nav-icon">🎁</span>Rewards</a>
-            <a href="#/powerups" class="nav-item" data-view="powerups" onclick="closeMobileSidebar()"><span class="nav-icon">⚡</span>Power Ups</a>
             <a href="#/history" class="nav-item" data-view="history" onclick="closeMobileSidebar()"><span class="nav-icon">📜</span>History</a>
-            
+            <a href="#/powerups" class="nav-item" data-view="powerups" onclick="closeMobileSidebar()"><span class="nav-icon">⚡</span>Power Ups</a>
           </div>
           <div class="nav-section">
             <div class="nav-section-title">General</div>
             <a href="#/settings" class="nav-item" data-view="settings" onclick="closeMobileSidebar()"><span class="nav-icon">⚙️</span>Settings</a>
-            <a href="#/extras" class="nav-item" data-view="extras" onclick="closeMobileSidebar()"><span class="nav-icon">⭐</span>Extras</a>
+            <a href="#/extras" class="nav-item" data-view="extras" onclick="closeMobileSidebar()"><span class="nav-icon">🎮</span>Extras</a>
           </div>
         `;
       }
@@ -2922,26 +2997,42 @@
         }, 5000); // Stop after 5 seconds to be safe
     }
 
-    function updateClassSelector() {
+    async function updateClassSelector() {
       const selector = document.getElementById('classSelector');
       selector.innerHTML = '';
-      const userClasses = classes.filter(c => c.teacherUsername === currentUser.username);
+      const userClasses = classes.filter(c => c.teacher_id === currentUser.id);
+      
+      if (userClasses.length === 0) {
+        selector.innerHTML = '<option>No classes yet</option>';
+        currentClassId = null;
+        localStorage.removeItem('limud_currentClassId');
+        await fetchClassData(null);
+        return;
+      }
+      
       userClasses.forEach(cls => {
         const option = document.createElement('option');
         option.value = cls.id;
         option.textContent = cls.name;
         selector.appendChild(option);
       });
-      if (currentClassId) {
+      
+      // Try to keep the last selected class, otherwise default to the first
+      if (currentClassId && userClasses.some(c => c.id === currentClassId)) {
         selector.value = currentClassId;
-      } else if (userClasses.length > 0) {
+      } else {
         currentClassId = userClasses[0].id;
         selector.value = currentClassId;
+        localStorage.setItem('limud_currentClassId', currentClassId);
       }
-      selector.onchange = () => {
+      
+      await fetchClassData(currentClassId);
+      router();
+
+      selector.onchange = async () => {
         currentClassId = selector.value;
-        saveData();
-        // The switchView will trigger all necessary re-renders
+        localStorage.setItem('limud_currentClassId', currentClassId);
+        await fetchClassData(currentClassId);
         router();
       };
     }
@@ -2951,47 +3042,56 @@
       openModal('newClassModal');
     }
 
-    function addNewClass() {
+    async function addNewClass() {
       const className = document.getElementById('newClassName').value.trim();
       if (!className) {
         showNotification('Please enter class name', 'error');
         return;
       }
-      const newClass = {
-        id: generateId(),
+      
+      const { data, error } = await db.from('classes').insert({
         name: className,
-        teacherUsername: currentUser.username
-      };
-      classes.push(newClass);
-      currentClassId = newClass.id;
-      saveData();
-      updateClassSelector();
-      switchView('students');
+        teacher_id: currentUser.id,
+        school: currentUser.school
+      }).select().single();
+
+      if (error) {
+          showNotification(`Error: ${error.message}`, 'error');
+          return;
+      }
+
+      classes.push(data);
+      currentClassId = data.id;
+      localStorage.setItem('limud_currentClassId', currentClassId);
+      await updateClassSelector();
+      
       closeModal('newClassModal');
       showNotification('Class created!', 'success');
     }
 
     function getPowerUpInfo(studentId) {
-      if (!students[currentClassId] || !students[currentClassId][studentId]) return null;
-      const student = students[currentClassId][studentId];
-      if (!student.powerUp) return null;
+      if (!students || students.length === 0) return null;
+      const student = students.find(s => s.id === studentId);
+      if (!student || !student.power_up) return null;
+      
       const now = new Date();
-      const end = new Date(student.powerUp.endDate);
+      const end = new Date(student.power_up.endDate);
+      
       if (now > end) {
-        delete student.powerUp;
-        saveData();
+        // Power-up has expired, update it in the database
+        db.from('students').update({ power_up: null }).eq('id', studentId).then(({ error }) => {
+            if (error) console.error('Failed to clear expired power-up:', error);
+            else student.power_up = null; // Update local state
+        });
         return null;
       }
-      return student.powerUp;
+      return student.power_up;
     }
 
     function renderStudentsView() {
       if (!currentClassId) return;
-      if (!students[currentClassId]) students[currentClassId] = {};
-      if (!reasons[currentClassId]) reasons[currentClassId] = [];
-      if (!history[currentClassId]) history[currentClassId] = [];
       updateReasonsList();
-      const classStudents = Object.values(students[currentClassId]);
+      
       const grid = document.getElementById('studentsGrid');
       const list = document.getElementById('studentsList');
       const compact = document.getElementById('studentsCompact');
@@ -3006,12 +3106,12 @@
       list.innerHTML = '';
       compact.innerHTML = '';
 
-      classStudents.forEach(student => {
+      students.forEach(student => {
         const powerUpInfo = getPowerUpInfo(student.id);
         const multiplierBadge = powerUpInfo ? `<span style="background: var(--warning-color); color: var(--surface); padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem; margin-left: 0.5rem;">x${powerUpInfo.multiplier}</span>` : '';
         const selectedClass = selectedStudents.has(student.id) ? 'selected' : '';
-        const avatar = student.photo ? `<img src="${student.photo}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
-        const totalRewards = (student.pointsRewards || 0) + (student.instantRewards || 0);
+        const avatar = student.photo_url ? `<img src="${student.photo_url}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
+        const totalRewards = (student.points_rewards || 0) + (student.instant_rewards || 0);
         
         const gridItem = `
           <div class="student-card ${selectedClass}" onclick="${bulkMode ? `toggleStudentSelection('${student.id}')` : `openStudentPointsModal('${student.id}')`}">
@@ -3093,7 +3193,7 @@
       }
     }
 
-    function addStudent() {
+    async function addStudent() {
       const name = document.getElementById('studentName').value.trim();
       const initialPoints = parseInt(document.getElementById('initialPoints').value) || 0;
       const file = document.getElementById('studentPhoto').files[0];
@@ -3102,29 +3202,36 @@
         showNotification('Please enter student name', 'error');
         return;
       }
+      
+      let photoUrl = null;
+      if (file) {
+          const filePath = `${currentClassId}/${Date.now()}_${file.name}`;
+          const { error: uploadError } = await db.storage.from('student_photos').upload(filePath, file);
 
-      const student = {
-        id: generateId(),
-        name,
-        points: initialPoints,
+          if (uploadError) {
+              showNotification(`Photo upload failed: ${uploadError.message}`, 'error');
+              return;
+          }
+
+          const { data: urlData } = db.storage.from('student_photos').getPublicUrl(filePath);
+          photoUrl = urlData.publicUrl;
+      }
+      
+      const newStudent = {
+          name,
+          points: initialPoints,
+          photo_url: photoUrl,
+          class_id: currentClassId
       };
 
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          student.photo = e.target.result;
-          finalizeAddStudent(student);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        finalizeAddStudent(student);
-      }
-    }
+      const { data, error } = await db.from('students').insert(newStudent).select().single();
 
-    function finalizeAddStudent(student) {
-      if (!students[currentClassId]) students[currentClassId] = {};
-      students[currentClassId][student.id] = student;
-      saveData();
+      if (error) {
+          showNotification(`Error adding student: ${error.message}`, 'error');
+          return;
+      }
+
+      students.push(data);
       renderStudentsView();
       closeModal('addStudentModal');
       showNotification('Student added!', 'success');
@@ -3135,17 +3242,22 @@
       openModal('addMultipleModal');
     }
 
-    function addMultipleStudents() {
+    async function addMultipleStudents() {
       const names = document.getElementById('multipleNames').value.trim().split('\n').map(n => n.trim()).filter(n => n);
-      names.forEach(name => {
-        const student = {
-          id: generateId(),
-          name,
-          points: 0
-        };
-        students[currentClassId][student.id] = student;
-      });
-      saveData();
+      const newStudents = names.map(name => ({
+        name,
+        points: 0,
+        class_id: currentClassId
+      }));
+
+      const { data, error } = await db.from('students').insert(newStudents).select();
+
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
+
+      students.push(...data);
       renderStudentsView();
       closeModal('addMultipleModal');
       showNotification(`${names.length} students added!`, 'success');
@@ -3153,13 +3265,13 @@
 
     function openEditStudentModal(studentId) {
       currentStudentId = studentId;
-      const student = students[currentClassId][studentId];
+      const student = students.find(s => s.id === studentId);
       document.getElementById('editStudentName').value = student.name;
       const preview = document.getElementById('editPhotoPreview');
       const img = document.getElementById('editPreviewImg');
       document.getElementById('editStudentPhoto').value = '';
-      if (student.photo) {
-        img.src = student.photo;
+      if (student.photo_url) {
+        img.src = student.photo_url;
         preview.style.display = 'block';
       } else {
         preview.style.display = 'none';
@@ -3168,39 +3280,53 @@
       openModal('editStudentModal');
     }
 
-    function updateStudent() {
+    async function updateStudent() {
       const name = document.getElementById('editStudentName').value.trim();
       const file = document.getElementById('editStudentPhoto').files[0];
       if (!name) {
         showNotification('Please enter name', 'error');
         return;
       }
-      const student = students[currentClassId][currentStudentId];
-      student.name = name;
+      const student = students.find(s => s.id === currentStudentId);
+      const updates = { name };
+
       if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          student.photo = e.target.result;
-          saveData();
-          renderStudentsView();
-          renderLeaderboard();
-          closeModal('editStudentModal');
-          showNotification('Student updated!', 'success');
-        };
-        reader.readAsDataURL(file);
-      } else {
-        saveData();
-        renderStudentsView();
-        renderLeaderboard();
-        closeModal('editStudentModal');
-        showNotification('Student updated!', 'success');
+          const filePath = `${currentClassId}/${Date.now()}_${file.name}`;
+          const { error: uploadError } = await db.storage.from('student_photos').upload(filePath, file);
+          if (uploadError) {
+              showNotification(`Photo upload failed: ${uploadError.message}`, 'error');
+              return;
+          }
+          const { data: urlData } = db.storage.from('student_photos').getPublicUrl(filePath);
+          updates.photo_url = urlData.publicUrl;
       }
+      
+      const { data, error } = await db.from('students').update(updates).eq('id', currentStudentId).select().single();
+
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
+      
+      const index = students.findIndex(s => s.id === currentStudentId);
+      students[index] = data;
+
+      renderStudentsView();
+      renderLeaderboard();
+      closeModal('editStudentModal');
+      showNotification('Student updated!', 'success');
     }
 
-    function deleteStudent() {
+    async function deleteStudent() {
       if (!confirm('Are you sure?')) return;
-      delete students[currentClassId][currentStudentId];
-      saveData();
+      const { error } = await db.from('students').delete().eq('id', currentStudentId);
+      
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
+
+      students = students.filter(s => s.id !== currentStudentId);
       renderStudentsView();
       renderLeaderboard();
       closeModal('editStudentModal');
@@ -3208,11 +3334,11 @@
     }
     
     function copyAllStudentNames() {
-      if (!currentClassId || !students[currentClassId]) {
+      if (!students || students.length === 0) {
         showNotification('No students to copy.', 'warning');
         return;
       }
-      const studentNames = Object.values(students[currentClassId]).map(s => s.name).join('\n');
+      const studentNames = students.map(s => s.name).join('\n');
       navigator.clipboard.writeText(studentNames).then(() => {
         showNotification('All student names copied to clipboard!', 'success');
       }, () => {
@@ -3258,35 +3384,57 @@
       openModal('bulkPointsModal');
     }
 
-    function confirmBulkPoints() {
-      const reason = document.getElementById('bulkReason').value.trim();
+    async function confirmBulkPoints() {
+      const reasonText = document.getElementById('bulkReason').value.trim();
       const points = parseInt(document.getElementById('bulkPointAmount').value);
       const change = bulkAction === 'add' ? points : -points;
+
+      const updates = [];
+      const historyEntries = [];
+
       selectedStudents.forEach(studentId => {
+        const student = students.find(s => s.id === studentId);
         const powerUpInfo = getPowerUpInfo(studentId);
         const multiplier = (bulkAction === 'add' && powerUpInfo) ? powerUpInfo.multiplier : 1;
         const effectiveChange = Math.round(change * multiplier);
-        const student = students[currentClassId][studentId];
-        student.points = Math.max(0, (student.points || 0) + effectiveChange);
-        history[currentClassId].push({
-          id: generateId(),
+        const newPoints = Math.max(0, (student.points || 0) + effectiveChange);
+        
+        updates.push({ id: studentId, points: newPoints });
+        historyEntries.push({
           type: bulkAction,
-          studentId,
+          student_id: studentId,
+          class_id: currentClassId,
           points: effectiveChange,
-          reason,
+          reason: reasonText,
           multiplier,
           timestamp: new Date().toISOString()
         });
       });
-      if (reason && !reasons[currentClassId].includes(reason)) {
-        reasons[currentClassId].push(reason);
-        updateReasonsList();
+
+      // Batch update student points
+      const { error: updateError } = await db.from('students').upsert(updates);
+      if (updateError) {
+          showNotification(`Error updating points: ${updateError.message}`, 'error');
+          return;
+      }
+      // Update local state
+      updates.forEach(update => {
+        const student = students.find(s => s.id === update.id);
+        if (student) student.points = update.points;
+      });
+
+      // Batch insert history
+      await db.from('history').insert(historyEntries);
+      
+      if (reasonText && !reasons.some(r => r.text === reasonText)) {
+        const { data: newReason, error } = await db.from('reasons').insert({ text: reasonText, class_id: currentClassId }).select().single();
+        if (!error) reasons.push(newReason);
         renderSettingsView();
       }
-      saveData();
+
       renderStudentsView();
       renderLeaderboard();
-      renderHistoryView();
+      // renderHistoryView(); // Defer to avoid extra DB call
       exitBulkMode();
       closeModal('bulkPointsModal');
       showNotification(`${bulkAction === 'add' ? 'Added' : 'Subtracted'} points to selected students`, 'success');
@@ -3301,63 +3449,70 @@
       openModal('studentPointsModal');
     }
 
-    function updateStudentPoints() {
+    async function updateStudentPoints() {
       const change = parseInt(document.getElementById('pointsChange').value);
-      const reason = document.getElementById('pointsReason').value.trim();
+      const reasonText = document.getElementById('pointsReason').value.trim();
       if (isNaN(change)) {
         showNotification('Please enter valid points', 'error');
         return;
       }
+      
       const type = change > 0 ? 'add' : 'subtract';
+      const student = students.find(s => s.id === currentStudentId);
       const powerUpInfo = getPowerUpInfo(currentStudentId);
       const multiplier = (change > 0 && powerUpInfo) ? powerUpInfo.multiplier : 1;
       const effectiveChange = Math.round(change * multiplier);
-      const student = students[currentClassId][currentStudentId];
-      student.points = Math.max(0, (student.points || 0) + effectiveChange);
-      history[currentClassId].push({
-        id: generateId(),
+      const newPoints = Math.max(0, (student.points || 0) + effectiveChange);
+      
+      const { error } = await db.from('students').update({ points: newPoints }).eq('id', currentStudentId);
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
+      
+      student.points = newPoints; // Update local state
+      
+      await db.from('history').insert({
         type: type,
-        studentId: currentStudentId,
+        student_id: currentStudentId,
+        class_id: currentClassId,
         points: effectiveChange,
-        reason,
+        reason: reasonText,
         multiplier,
         timestamp: new Date().toISOString()
       });
-      if (reason && !reasons[currentClassId].includes(reason)) {
-        reasons[currentClassId].push(reason);
-        updateReasonsList();
-        renderSettingsView();
+
+      if (reasonText && !reasons.some(r => r.text === reasonText)) {
+          const { data: newReason } = await db.from('reasons').insert({ text: reasonText, class_id: currentClassId }).select().single();
+          if (newReason) reasons.push(newReason);
+          renderSettingsView();
       }
-      saveData();
+      
       renderStudentsView();
       renderLeaderboard();
-      renderHistoryView();
+      // renderHistoryView(); // Defer
       closeModal('studentPointsModal');
       showNotification(`${type === 'add' ? 'Added' : 'Subtracted'} ${Math.abs(effectiveChange)} points`, 'success');
     }
 
     function updateReasonsList() {
       const datalist = document.getElementById('reasonsList');
-      if (reasons[currentClassId]) {
-        datalist.innerHTML = reasons[currentClassId].map(r => `<option value="${sanitizeHTML(r)}">`).join('');
-      }
+      datalist.innerHTML = reasons.map(r => `<option value="${sanitizeHTML(r.text)}">`).join('');
     }
 
     function renderSavedReasons(containerId, inputId) {
       const container = document.getElementById(containerId);
       container.innerHTML = '';
-      if (reasons[currentClassId]) {
-        reasons[currentClassId].forEach(reason => {
-          const chip = document.createElement('button');
-          chip.className = 'reason-select-chip';
-          chip.textContent = sanitizeHTML(reason);
-          chip.type = 'button';
-          chip.onclick = () => {
-            document.getElementById(inputId).value = reason;
-          };
-          container.appendChild(chip);
-        });
-      }
+      reasons.forEach(reason => {
+        const chip = document.createElement('button');
+        chip.className = 'reason-select-chip';
+        chip.textContent = sanitizeHTML(reason.text);
+        chip.type = 'button';
+        chip.onclick = () => {
+          document.getElementById(inputId).value = reason.text;
+        };
+        container.appendChild(chip);
+      });
     }
 
     function onSearchChange() {
@@ -3384,37 +3539,34 @@
       openModal('createRewardModal');
     }
 
-    function createReward() {
+    async function createReward() {
       const title = document.getElementById('rewardTitle').value.trim();
       const description = document.getElementById('rewardDescription').value.trim();
       const pointsRequired = parseInt(document.getElementById('rewardPoints').value);
       const icon = document.getElementById('rewardIcon').value;
       const type = document.querySelector('input[name="rewardType"]:checked').value;
       
-      if (!title) {
-        showNotification('Please enter a reward title', 'error');
+      if (!title || !pointsRequired || pointsRequired < 1) {
+        showNotification('Please enter a valid title and points required', 'error');
         return;
       }
       
-      if (!pointsRequired || pointsRequired < 1) {
-        showNotification('Please enter valid points required', 'error');
-        return;
-      }
-      
-      const reward = {
-        id: generateId(),
-        title: title,
-        description: description,
-        type: type,
-        pointsRequired: pointsRequired,
-        icon: icon,
-        createdAt: new Date().toISOString()
+      const newReward = {
+        title,
+        description,
+        type,
+        points_required: pointsRequired,
+        icon,
+        class_id: currentClassId
       };
       
-      if (!rewards[currentClassId]) rewards[currentClassId] = {};
-      rewards[currentClassId][reward.id] = reward;
+      const { data, error } = await db.from('rewards').insert(newReward).select().single();
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
       
-      saveData();
+      rewards.push(data);
       renderRewardsView();
       closeModal('createRewardModal');
       showNotification('Reward created successfully!', 'success');
@@ -3422,62 +3574,65 @@
 
     function openEditRewardModal(rewardId) {
       currentRewardId = rewardId;
-      const reward = rewards[currentClassId][rewardId];
+      const reward = rewards.find(r => r.id === rewardId);
       if (!reward) return;
       document.getElementById('editRewardTitle').value = reward.title;
       document.getElementById('editRewardDescription').value = reward.description || '';
       document.getElementById('editRewardIcon').value = reward.icon || '';
-      document.getElementById('editRewardPoints').value = reward.pointsRequired;
+      document.getElementById('editRewardPoints').value = reward.points_required;
       document.querySelector(`input[name="editRewardType"][value="${reward.type}"]`).checked = true;
       openModal('editRewardModal');
     }
 
-    function updateReward() {
+    async function updateReward() {
       const title = document.getElementById('editRewardTitle').value.trim();
       const description = document.getElementById('editRewardDescription').value.trim();
       const pointsRequired = parseInt(document.getElementById('editRewardPoints').value);
       const icon = document.getElementById('editRewardIcon').value;
       const type = document.querySelector('input[name="editRewardType"]:checked').value;
 
-      if (!title) {
-        showNotification('Please enter a reward title', 'error');
+      if (!title || !pointsRequired || pointsRequired < 1) {
+        showNotification('Please enter valid title and points', 'error');
         return;
       }
-      if (!pointsRequired || pointsRequired < 1) {
-        showNotification('Please enter valid points required', 'error');
+
+      const updates = { title, description, points_required: pointsRequired, icon, type };
+      const { data, error } = await db.from('rewards').update(updates).eq('id', currentRewardId).select().single();
+
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
         return;
       }
-      const reward = rewards[currentClassId][currentRewardId];
-      if (reward) {
-        reward.title = title;
-        reward.description = description;
-        reward.type = type;
-        reward.pointsRequired = pointsRequired;
-        reward.icon = icon;
-        saveData();
-        renderRewardsView();
-        closeModal('editRewardModal');
-        showNotification('Reward updated successfully!', 'success');
-      }
+      
+      const index = rewards.findIndex(r => r.id === currentRewardId);
+      rewards[index] = data;
+      renderRewardsView();
+      closeModal('editRewardModal');
+      showNotification('Reward updated successfully!', 'success');
     }
 
-    function deleteReward() {
+    async function deleteReward() {
       if (!confirm('Are you sure you want to delete this reward?')) return;
-      delete rewards[currentClassId][currentRewardId];
-      saveData();
+      
+      const { error } = await db.from('rewards').delete().eq('id', currentRewardId);
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
+
+      rewards = rewards.filter(r => r.id !== currentRewardId);
       renderRewardsView();
       closeModal('editRewardModal');
       showNotification('Reward deleted successfully!', 'success');
     }
 
     function renderRewardsView() {
-      if (!currentClassId || !rewards[currentClassId]) {
-          document.getElementById('rewardsGrid').innerHTML = '';
+      const rewardsGrid = document.getElementById('rewardsGrid');
+      if (!rewards) {
+          rewardsGrid.innerHTML = '';
           return;
       }
-      const rewardsGrid = document.getElementById('rewardsGrid');
-      const classRewards = Object.values(rewards[currentClassId]);
-      rewardsGrid.innerHTML = classRewards.map(reward => {
+      rewardsGrid.innerHTML = rewards.map(reward => {
         let className = '';
         let badgeClass = '';
         let badgeText = '';
@@ -3490,7 +3645,6 @@
           badgeClass = 'require-badge';
           badgeText = 'Points Required';
         } else {
-          // Gracefully handle old reward types by not rendering them
           return '';
         }
         return `
@@ -3503,7 +3657,7 @@
                 <h3 class="reward-title">${reward.icon ? reward.icon + ' ' : ''}${sanitizeHTML(reward.title)}</h3>
                 ${reward.description ? `<p class="reward-description">${sanitizeHTML(reward.description)}</p>` : ''}
               </div>
-              <span class="reward-points">${reward.pointsRequired} pts</span>
+              <span class="reward-points">${reward.points_required} pts</span>
             </div>
             <div class="reward-actions">
               <button class="btn btn-primary" onclick="openClaimRewardModal('${reward.id}')">Claim for Students</button>
@@ -3522,18 +3676,18 @@
 
     function openClaimRewardModal(rewardId) {
       currentRewardId = rewardId;
-      const reward = rewards[currentClassId][rewardId];
+      const reward = rewards.find(r => r.id === rewardId);
       if (!reward) return;
       const content = document.getElementById('claimRewardContent');
       content.innerHTML = `
         <h3>${reward.icon ? reward.icon + ' ' : ''}${sanitizeHTML(reward.title)}</h3>
         ${reward.description ? `<p>${sanitizeHTML(reward.description)}</p>` : ''}
-        <p>Requires ${reward.pointsRequired} points</p>
+        <p>Requires ${reward.points_required} points</p>
         <div class="form-group">
           <label class="form-label">Select Students</label>
           <button class="btn btn-secondary mb-2" onclick="toggleSelectAll()">Select All / Deselect All</button>
           <div class="multi-select-list">
-            ${Object.values(students[currentClassId]).map(student => `
+            ${students.map(student => `
               <div class="multi-select-option">
                 <input type="checkbox" id="chk-${student.id}" value="${student.id}">
                 <label for="chk-${student.id}">${sanitizeHTML(student.name)} (${student.points} pts)</label>
@@ -3547,49 +3701,61 @@
       openModal('claimRewardModal');
     }
 
-    function confirmClaimReward() {
+    async function confirmClaimReward() {
       const studentIds = Array.from(document.querySelectorAll('.multi-select-list input:checked')).map(cb => cb.value);
-      const reward = rewards[currentClassId][currentRewardId];
+      const reward = rewards.find(r => r.id === currentRewardId);
       if (!reward || studentIds.length === 0) return;
+
       let successCount = 0;
       let failCount = 0;
+      const studentUpdates = [];
+      const historyEntries = [];
+
       studentIds.forEach(studentId => {
-        const student = students[currentClassId][studentId];
-        if (student.points < reward.pointsRequired) {
+        const student = students.find(s => s.id === studentId);
+        if (student.points < reward.points_required) {
           failCount++;
           return; // Skip if not enough points
         }
         
-        student.pointsRewards = (student.pointsRewards || 0) + 1;
+        const newPointsRewards = (student.points_rewards || 0) + 1;
+        let newPoints = student.points;
+
+        const historyEntry = {
+            type: 'reward_claim',
+            student_id: studentId,
+            class_id: currentClassId,
+            reward_id: currentRewardId,
+            reason: `Claimed reward: ${reward.title}`,
+        };
 
         if (reward.type === 'deduct') {
-          student.points -= reward.pointsRequired;
-          history[currentClassId].push({
-            id: generateId(),
-            type: 'reward_claim',
-            studentId: studentId,
-            rewardId: currentRewardId,
-            points: -reward.pointsRequired,
-            reason: `Claimed reward: ${reward.title}`,
-            timestamp: new Date().toISOString()
-          });
-        } else if (reward.type === 'require') {
-          history[currentClassId].push({
-            id: generateId(),
-            type: 'reward_claim',
-            studentId: studentId,
-            rewardId: currentRewardId,
-            points: 0,
-            reason: `Claimed reward: ${reward.title} (required points)`,
-            timestamp: new Date().toISOString()
-          });
+            newPoints -= reward.points_required;
+            historyEntry.points = -reward.points_required;
         }
+
+        studentUpdates.push({ id: studentId, points: newPoints, points_rewards: newPointsRewards });
+        historyEntries.push(historyEntry);
         successCount++;
       });
-      saveData();
+      
+      // Batch process updates
+      if (studentUpdates.length > 0) {
+        await db.from('students').upsert(studentUpdates);
+        await db.from('history').insert(historyEntries);
+        // Update local state
+        studentUpdates.forEach(update => {
+            const student = students.find(s => s.id === update.id);
+            if (student) {
+                student.points = update.points;
+                student.points_rewards = update.points_rewards;
+            }
+        });
+      }
+
       renderStudentsView();
       renderLeaderboard();
-      renderHistoryView();
+      // renderHistoryView(); // defer
       closeModal('claimRewardModal');
       let message = `${successCount} rewards claimed successfully!`;
       if (failCount > 0) {
@@ -3607,7 +3773,7 @@
       openModal('createPowerUpModal');
     }
 
-    function createPowerUp() {
+    async function createPowerUp() {
       const title = document.getElementById('powerUpTitle').value.trim();
       const description = document.getElementById('powerUpDescription').value.trim();
       const multiplier = parseFloat(document.getElementById('powerUpMultiplier').value);
@@ -3616,17 +3782,15 @@
         showNotification('Please fill in valid values', 'error');
         return;
       }
-      const powerup = {
-        id: generateId(),
-        title,
-        description,
-        multiplier,
-        duration,
-        createdAt: new Date().toISOString()
-      };
-      if (!powerups[currentClassId]) powerups[currentClassId] = {};
-      powerups[currentClassId][powerup.id] = powerup;
-      saveData();
+      const newPowerUp = { title, description, multiplier, duration, class_id: currentClassId };
+      const { data, error } = await db.from('powerups').insert(newPowerUp).select().single();
+      
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
+
+      powerups.push(data);
       renderPowerUpsView();
       closeModal('createPowerUpModal');
       showNotification('Power Up created!', 'success');
@@ -3634,7 +3798,7 @@
 
     function openEditPowerUpModal(powerUpId) {
       currentPowerUpId = powerUpId;
-      const powerup = powerups[currentClassId][powerUpId];
+      const powerup = powerups.find(p => p.id === powerUpId);
       if (!powerup) return;
       document.getElementById('editPowerUpTitle').value = powerup.title;
       document.getElementById('editPowerUpDescription').value = powerup.description || '';
@@ -3643,7 +3807,7 @@
       openModal('editPowerUpModal');
     }
 
-    function updatePowerUp() {
+    async function updatePowerUp() {
       const title = document.getElementById('editPowerUpTitle').value.trim();
       const description = document.getElementById('editPowerUpDescription').value.trim();
       const multiplier = parseFloat(document.getElementById('editPowerUpMultiplier').value);
@@ -3652,33 +3816,37 @@
         showNotification('Please fill in valid values', 'error');
         return;
       }
-      const powerup = powerups[currentClassId][currentPowerUpId];
-      if (powerup) {
-        powerup.title = title;
-        powerup.description = description;
-        powerup.multiplier = multiplier;
-        powerup.duration = duration;
-        saveData();
-        renderPowerUpsView();
-        closeModal('editPowerUpModal');
-        showNotification('Power Up updated!', 'success');
+      const updates = { title, description, multiplier, duration };
+      const { data, error } = await db.from('powerups').update(updates).eq('id', currentPowerUpId).select().single();
+
+      if (error) {
+          showNotification(`Error: ${error.message}`, 'error');
+          return;
       }
+      
+      const index = powerups.findIndex(p => p.id === currentPowerUpId);
+      powerups[index] = data;
+      renderPowerUpsView();
+      closeModal('editPowerUpModal');
+      showNotification('Power Up updated!', 'success');
     }
 
-    function deletePowerUp() {
+    async function deletePowerUp() {
       if (!confirm('Are you sure?')) return;
-      delete powerups[currentClassId][currentPowerUpId];
-      saveData();
+      const { error } = await db.from('powerups').delete().eq('id', currentPowerUpId);
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
+      powerups = powerups.filter(p => p.id !== currentPowerUpId);
       renderPowerUpsView();
       closeModal('editPowerUpModal');
       showNotification('Power Up deleted!', 'success');
     }
 
     function renderPowerUpsView() {
-      if (!currentClassId || !powerups[currentClassId]) return;
       const powerupsGrid = document.getElementById('powerupsGrid');
-      const classPowerUps = Object.values(powerups[currentClassId]);
-      powerupsGrid.innerHTML = classPowerUps.map(powerup => `
+      powerupsGrid.innerHTML = powerups.map(powerup => `
         <div class="reward-card">
           <div class="reward-header">
             <div>
@@ -3697,7 +3865,7 @@
 
     function openAssignPowerUpModal(powerUpId) {
       currentPowerUpId = powerUpId;
-      const powerup = powerups[currentClassId][powerUpId];
+      const powerup = powerups.find(p => p.id === powerUpId);
       const content = document.getElementById('claimRewardContent');
       content.innerHTML = `
         <h3>Assign ${sanitizeHTML(powerup.title)}</h3>
@@ -3707,7 +3875,7 @@
           <label class="form-label">Select Students</label>
           <button class="btn btn-secondary mb-2" onclick="toggleSelectAll()">Select All / Deselect All</button>
           <div class="multi-select-list">
-            ${Object.values(students[currentClassId]).map(student => `
+            ${students.map(student => `
               <div class="multi-select-option">
                 <input type="checkbox" id="chk-${student.id}" value="${student.id}">
                 <label for="chk-${student.id}">${sanitizeHTML(student.name)}</label>
@@ -3721,29 +3889,38 @@
       openModal('claimRewardModal');
     }
 
-    function confirmAssignPowerUp() {
+    async function confirmAssignPowerUp() {
       const studentIds = Array.from(document.querySelectorAll('.multi-select-list input:checked')).map(cb => cb.value);
-      const powerup = powerups[currentClassId][currentPowerUpId];
+      const powerup = powerups.find(p => p.id === currentPowerUpId);
       if (!powerup || studentIds.length === 0) return;
+
+      const studentUpdates = [];
+      const historyEntries = [];
+      const endDate = new Date(Date.now() + powerup.duration * 24 * 60 * 60 * 1000).toISOString();
+      const powerUpPayload = { multiplier: powerup.multiplier, endDate: endDate };
+
       studentIds.forEach(studentId => {
-        const student = students[currentClassId][studentId];
-        student.powerUp = {
-          multiplier: powerup.multiplier,
-          endDate: new Date(Date.now() + powerup.duration * 24 * 60 * 60 * 1000).toISOString()
-        };
-        history[currentClassId].push({
-          id: generateId(),
-          type: 'powerup_assign',
-          studentId: studentId,
-          powerUpId: currentPowerUpId,
-          reason: `Assigned power up: ${powerup.title}`,
-          timestamp: new Date().toISOString()
-        });
+          studentUpdates.push({ id: studentId, power_up: powerUpPayload });
+          historyEntries.push({
+              type: 'powerup_assign',
+              student_id: studentId,
+              class_id: currentClassId,
+              powerup_id: currentPowerUpId,
+              reason: `Assigned power up: ${powerup.title}`,
+          });
       });
-      saveData();
+
+      await db.from('students').upsert(studentUpdates);
+      await db.from('history').insert(historyEntries);
+      
+      // Update local state
+      studentUpdates.forEach(update => {
+        const student = students.find(s => s.id === update.id);
+        if (student) student.power_up = update.power_up;
+      });
+
       renderStudentsView();
       renderLeaderboard();
-      renderHistoryView();
       closeModal('claimRewardModal');
       showNotification('Power Up assigned!', 'success');
     }
@@ -3751,11 +3928,11 @@
     // Leaderboard
     function renderLeaderboard() {
       const leaderboard = document.getElementById('leaderboard');
-      const classStudents = Object.values(students[currentClassId] || {}).sort((a,b) => b.points - a.points);
-      leaderboard.innerHTML = classStudents.map((student, index) => {
+      const sortedStudents = [...students].sort((a,b) => b.points - a.points);
+      leaderboard.innerHTML = sortedStudents.map((student, index) => {
         const rank = index + 1;
         const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
-        const avatar = student.photo ? `<img src="${student.photo}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
+        const avatar = student.photo_url ? `<img src="${student.photo_url}" alt="${sanitizeHTML(student.name)}"/>` : student.name.charAt(0).toUpperCase();
         return `
           <div class="leaderboard-item">
             <div class="leaderboard-rank ${rankClass}">${rank}</div>
@@ -3768,23 +3945,23 @@
     }
 
     // History
-    function renderHistoryView() {
+    async function renderHistoryView() {
+      // Re-fetch history to get the latest
+      const { data, error } = await db.from('history').select('*').eq('class_id', currentClassId);
+      if (!error) history = data;
+
       const historyList = document.getElementById('historyList');
-      const classHistory = history[currentClassId] || [];
-      historyList.innerHTML = classHistory.slice().reverse().map(entry => {
-        const student = students[currentClassId]?.[entry.studentId] || {name: 'Unknown'};
+      historyList.innerHTML = history.slice().reverse().map(entry => {
+        const student = students.find(s => s.id === entry.student_id) || {name: 'Unknown'};
         let actionText = '';
         if (entry.type === 'add' || entry.type === 'subtract') {
           actionText = `${entry.points > 0 ? '+' : ''}${entry.points} points`;
           if (entry.multiplier > 1) actionText += ` (x${entry.multiplier})`;
         } else if (entry.type === 'reward_claim') {
-          const reward = rewards[currentClassId]?.[entry.rewardId];
+          const reward = rewards.find(r => r.id === entry.reward_id);
           actionText = `Claimed ${reward ? reward.title : 'reward'} (${entry.points ? -Math.abs(entry.points) + ' pts' : 'no deduct'})`;
-        } else if (entry.type === 'instant_reward') {
-          const reward = rewards[currentClassId]?.[entry.rewardId];
-          actionText = `Received ${reward ? reward.title : 'instant reward'}`;
         } else if (entry.type === 'powerup_assign') {
-          const powerup = powerups[currentClassId]?.[entry.powerUpId];
+          const powerup = powerups.find(p => p.id === entry.powerup_id);
           actionText = `Assigned ${powerup ? powerup.title : 'power up'}`;
         } else if (entry.type === 'reset') {
           actionText = 'Points reset';
@@ -3801,10 +3978,10 @@
     }
 
     function exportHistory() {
-      if (!currentClassId || !history[currentClassId]) return;
+      if (!currentClassId || history.length === 0) return;
       const currentClass = classes.find(c => c.id === currentClassId);
-      const historyData = history[currentClassId].map(entry => {
-        const student = students[currentClassId]?.[entry.studentId];
+      const historyData = history.map(entry => {
+        const student = students.find(s => s.id === entry.student_id);
         return {
           date: new Date(entry.timestamp).toLocaleString(),
           student: student ? student.name : 'Unknown',
@@ -3828,10 +4005,15 @@
       showNotification('History exported successfully!', 'success');
     }
 
-    function clearHistory() {
+    async function clearHistory() {
       if (!confirm('Are you sure you want to clear all history? This action cannot be undone.')) return;
-      history[currentClassId] = [];
-      saveData();
+      
+      const { error } = await db.from('history').delete().eq('class_id', currentClassId);
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
+      history = [];
       renderHistoryView();
       showNotification('History cleared successfully!', 'success');
     }
@@ -3842,77 +4024,89 @@
       document.getElementById('settingsSchool').textContent = currentUser.school;
       const currentClass = classes.find(c => c.id === currentClassId);
       document.getElementById('currentClassName').textContent = currentClass ? currentClass.name : 'None';
-      document.getElementById('totalStudents').textContent = Object.keys(students[currentClassId] || {}).length;
-      document.getElementById('totalPoints').textContent = Object.values(students[currentClassId] || {}).reduce((sum, s) => sum + s.points, 0);
+      document.getElementById('totalStudents').textContent = students.length;
+      document.getElementById('totalPoints').textContent = students.reduce((sum, s) => sum + s.points, 0);
+      
       const savedReasonsList = document.getElementById('savedReasonsList');
-      if (reasons[currentClassId]) {
-        savedReasonsList.innerHTML = reasons[currentClassId].map((reason, index) => `
-            <div class="reason-chip">
-              <span>${sanitizeHTML(reason)}</span>
-              <button onclick="openEditReasonModal(${index})">✏️</button>
-            </div>
-          `).join('');
-      } else {
-        savedReasonsList.innerHTML = '';
-      }
+      savedReasonsList.innerHTML = reasons.map(reason => `
+          <div class="reason-chip">
+            <span>${sanitizeHTML(reason.text)}</span>
+            <button onclick="openEditReasonModal('${reason.id}')">✏️</button>
+          </div>
+        `).join('');
     }
 
-    function openEditReasonModal(index) {
-      currentReasonIndex = index;
-      document.getElementById('editReasonText').value = reasons[currentClassId][index];
+    function openEditReasonModal(reasonId) {
+      currentReasonId = reasonId;
+      const reason = reasons.find(r => r.id === reasonId);
+      document.getElementById('editReasonText').value = reason.text;
       openModal('editReasonModal');
     }
 
-    function updateReason() {
-      const newReason = document.getElementById('editReasonText').value.trim();
-      if (!newReason) {
+    async function updateReason() {
+      const newReasonText = document.getElementById('editReasonText').value.trim();
+      if (!newReasonText) {
         showNotification('Please enter a reason', 'error');
         return;
       }
-      reasons[currentClassId][currentReasonIndex] = newReason;
-      saveData();
+
+      const { data, error } = await db.from('reasons').update({ text: newReasonText }).eq('id', currentReasonId).select().single();
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
+
+      const index = reasons.findIndex(r => r.id === currentReasonId);
+      reasons[index] = data;
       renderSettingsView();
       updateReasonsList();
       closeModal('editReasonModal');
       showNotification('Reason updated!', 'success');
     }
 
-    function deleteReason() {
+    async function deleteReason() {
       if (!confirm('Are you sure?')) return;
-      reasons[currentClassId].splice(currentReasonIndex, 1);
-      saveData();
+      
+      const { error } = await db.from('reasons').delete().eq('id', currentReasonId);
+      if (error) {
+          showNotification(`Error: ${error.message}`, 'error');
+          return;
+      }
+      
+      reasons = reasons.filter(r => r.id !== currentReasonId);
       renderSettingsView();
       updateReasonsList();
       closeModal('editReasonModal');
       showNotification('Reason deleted!', 'success');
     }
 
-    function resetAllPoints() {
+    async function resetAllPoints() {
       if (!confirm('Are you sure you want to reset all student points to 0? This action cannot be undone.')) return;
-      if (students[currentClassId]) {
-        Object.values(students[currentClassId]).forEach(student => {
-          student.points = 0;
-        });
-        history[currentClassId].push({
-          id: generateId(),
+      
+      const { error } = await db.from('students').update({ points: 0 }).eq('class_id', currentClassId);
+      if (error) {
+          showNotification(`Error: ${error.message}`, 'error');
+          return;
+      }
+
+      students.forEach(s => s.points = 0);
+      await db.from('history').insert({
+          class_id: currentClassId,
           type: 'reset',
           reason: 'All points reset by teacher',
-          timestamp: new Date().toISOString()
-        });
-        saveData();
-        renderStudentsView();
-        renderLeaderboard();
-        showNotification('All points reset successfully!', 'success');
-      }
+      });
+        
+      renderStudentsView();
+      renderLeaderboard();
+      showNotification('All points reset successfully!', 'success');
     }
 
     function backupClassData() {
       if (!currentClassId) return;
       const currentClass = classes.find(c => c.id === currentClassId);
-      const classStudents = Object.values(students[currentClassId] || {});
       const csvContent = [
         ['Student Name', 'Points', 'Rewards Claimed'],
-        ...classStudents.map(s => [s.name, s.points, (s.pointsRewards || 0) + (s.instantRewards || 0)])
+        ...students.map(s => [s.name, s.points, (s.points_rewards || 0) + (s.instant_rewards || 0)])
       ].map(row => row.map(cell => `"${(cell ?? '').toString().replace(/"/g, '""')}"`).join(',')).join('\n');
       const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
@@ -3924,20 +4118,23 @@
       showNotification('Class data backed up as spreadsheet!', 'success');
     }
 
-    function deleteCurrentClass() {
+    async function deleteCurrentClass() {
       if (!currentClassId) return;
       const currentClass = classes.find(c => c.id === currentClassId);
       if (!confirm(`Are you sure you want to delete "${currentClass.name}"? This action cannot be undone.`)) return;
+      
+      const { error } = await db.from('classes').delete().eq('id', currentClassId);
+      if (error) {
+        showNotification(`Error: ${error.message}`, 'error');
+        return;
+      }
+      
       classes = classes.filter(c => c.id !== currentClassId);
-      delete students[currentClassId];
-      delete rewards[currentClassId];
-      delete history[currentClassId];
-      delete powerups[currentClassId];
-      delete reasons[currentClassId];
-      const remainingClasses = classes.filter(c => c.teacherUsername === currentUser.username);
+      const remainingClasses = classes.filter(c => c.teacher_id === currentUser.id);
       currentClassId = remainingClasses.length > 0 ? remainingClasses[0].id : null;
-      saveData();
-      updateClassSelector();
+      localStorage.setItem('limud_currentClassId', currentClassId);
+      
+      await updateClassSelector();
       router();
       showNotification('Class deleted successfully!', 'success');
     }
@@ -3945,8 +4142,7 @@
     // Extras
     function renderExtrasView() {
       const embedsList = document.getElementById('embedsList');
-      const schoolEmbeds = embeds[currentUser.school] || [];
-      embedsList.innerHTML = schoolEmbeds.map(embed => `
+      embedsList.innerHTML = embeds.map(embed => `
         <div class="embed-container" id="embed-${embed.id}">
           <div class="embed-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div class="embed-header-content">
@@ -3967,7 +4163,7 @@
       container.classList.toggle('fullscreen');
     }
 
-    // Change Password
+    // Change Password (for logged-in user)
     function openChangePasswordModal() {
       document.getElementById('currentPassword').value = '';
       document.getElementById('newPassword').value = '';
@@ -3975,91 +4171,42 @@
       openModal('changePasswordModal');
     }
 
-    function changePassword() {
-      const currentPass = document.getElementById('currentPassword').value.trim();
-      const newPass = document.getElementById('newPassword').value.trim();
-      const confirmPass = document.getElementById('confirmNewPassword').value.trim();
-
-      if (currentPass !== currentUser.password) {
-        showNotification('Current password incorrect', 'error');
-        return;
-      }
-
-      if (!newPass || newPass !== confirmPass) {
-        showNotification('New passwords do not match or empty', 'error');
-        return;
-      }
-
-      currentUser.password = newPass;
-      users[currentUser.username].password = newPass;
-      saveData();
-      closeModal('changePasswordModal');
-      showNotification('Password changed successfully!', 'success');
+    async function changePassword() {
+        // Supabase has a different flow for this. The best practice is to
+        // send a password reset link. Updating it directly with the old password
+        // is less common and can be complex to implement securely client-side.
+        // For this app, we'll guide the user to a standard password reset flow.
+        const { data, error } = await db.auth.resetPasswordForEmail(currentUser.email);
+        if (error) {
+            showNotification(`Error: ${error.message}`, 'error');
+        } else {
+            closeModal('changePasswordModal');
+            showNotification(`A password reset link has been sent to ${currentUser.email}. Please check your inbox.`, 'success');
+        }
     }
 
     // Admin functions
-    function calculateStudentStats(studentId, classId) {
-        const classHistory = history[classId] || [];
-        const studentHistory = classHistory.filter(entry => entry.studentId === studentId);
+    async function calculateStudentStats(studentId, classId) {
+        const { data, error } = await db.from('history').select('*').eq('student_id', studentId);
+        if (error) return { pointsEarned: 0, pointsSpent: 0, rewardsClaimed: 0 };
         
-        let pointsEarned = 0;
-        let pointsSpent = 0;
-        let rewardsClaimed = 0;
+        const studentHistory = data || [];
+        let pointsEarned = 0, pointsSpent = 0, rewardsClaimed = 0;
 
         studentHistory.forEach(entry => {
-            if (entry.points && entry.points > 0) {
-                pointsEarned += entry.points;
-            }
-            if (entry.type === 'subtract' && entry.points) {
-                pointsSpent += Math.abs(entry.points);
-            }
+            if (entry.points && entry.points > 0) pointsEarned += entry.points;
+            if (entry.type === 'subtract' && entry.points) pointsSpent += Math.abs(entry.points);
             if (entry.type === 'reward_claim') {
                 rewardsClaimed++;
-                if (entry.points && entry.points < 0) {
-                    pointsSpent += Math.abs(entry.points);
-                }
+                if (entry.points && entry.points < 0) pointsSpent += Math.abs(entry.points);
             }
         });
-        
         return { pointsEarned, pointsSpent, rewardsClaimed };
     }
 
     function openCreateClassModal() {
-      document.getElementById('adminClassName').value = '';
-      document.getElementById('teacherUsername').value = '';
-      document.getElementById('teacherPassword').value = '';
-      openModal('createClassModal');
-    }
-
-    function createClass() {
-      const className = document.getElementById('adminClassName').value.trim();
-      const teacherUsername = document.getElementById('teacherUsername').value.trim();
-      const teacherPassword = document.getElementById('teacherPassword').value.trim();
-      if (!className || !teacherUsername || !teacherPassword) {
-        showNotification('Please fill in all fields', 'error');
-        return;
-      }
-      if (users[teacherUsername]) {
-        showNotification('Teacher username already exists', 'error');
-        return;
-      }
-      users[teacherUsername] = {
-        username: teacherUsername,
-        password: teacherPassword, // INSECURE: Storing plaintext passwords
-        type: 'personal',
-        school: currentUser.school,
-        createdAt: new Date().toISOString()
-      };
-      const newClass = {
-        id: generateId(),
-        name: className,
-        teacherUsername
-      };
-      classes.push(newClass);
-      saveData();
-      renderAdminClassesView();
-      closeModal('createClassModal');
-      showNotification('Class and teacher created!', 'success');
+      // This is now just for personal teachers. Admin flow is different.
+      openNewClassModal();
     }
     
     function openCreateTeacherModal() {
@@ -4068,80 +4215,21 @@
       openModal('createTeacherModal');
     }
 
-    function createTeacher() {
-      const teacherUsername = document.getElementById('newTeacherUsername').value.trim();
-      const teacherPassword = document.getElementById('newTeacherPassword').value.trim();
-      if (!teacherUsername || !teacherPassword) {
-        showNotification('Please fill in all fields', 'error');
-        return;
-      }
-      if (users[teacherUsername]) {
-        showNotification('Teacher username already exists', 'error');
-        return;
-      }
-      users[teacherUsername] = {
-        username: teacherUsername,
-        password: teacherPassword, // INSECURE: Storing plaintext passwords
-        type: 'personal',
-        school: currentUser.school,
-        createdAt: new Date().toISOString()
-      };
-      saveData();
-      renderAdminUsersView();
+    async function createTeacher() {
+      // Admin creating a teacher is a complex auth flow. For simplicity, we'll
+      // instruct the admin to have teachers sign up themselves with the correct school name.
+      showNotification('Please have the teacher sign up with your school name.', 'info');
       closeModal('createTeacherModal');
-      showNotification('Teacher created!', 'success');
     }
 
-    function openCreateAdminModal() {
-      document.getElementById('newAdminUsername').value = '';
-      document.getElementById('newAdminPassword').value = '';
-      openModal('createAdminModal');
+    async function createAdmin() {
+      // Similar to creating a teacher, this is complex from client-side.
+      showNotification('Please have the new admin sign up with your school name and select the Admin account type.', 'info');
+      closeModal('createAdminModal');
     }
 
-    function createAdmin() {
-        const username = document.getElementById('newAdminUsername').value.trim();
-        const password = document.getElementById('newAdminPassword').value.trim();
-        if (!username || !password) {
-            showNotification('Please fill in all fields', 'error');
-            return;
-        }
-        if (users[username]) {
-            showNotification('Username already exists', 'error');
-            return;
-        }
-        users[username] = {
-            username,
-            password,
-            type: 'admin',
-            school: currentUser.school,
-            createdAt: new Date().toISOString()
-        };
-        saveData();
-        renderAdminUsersView();
-        closeModal('createAdminModal');
-        showNotification('Admin created successfully!', 'success');
-    }
-
-    function openChangeTeacherPasswordModal(username) {
-        currentUsernameToEdit = username;
-        document.getElementById('changeTeacherPasswordTitle').textContent = `Change Password for ${username}`;
-        document.getElementById('newTeacherPass').value = '';
-        openModal('changeTeacherPasswordModal');
-    }
-
-    function changeTeacherPassword() {
-        const newPassword = document.getElementById('newTeacherPass').value.trim();
-        if (!newPassword) {
-            showNotification('Password cannot be empty', 'error');
-            return;
-        }
-        if (users[currentUsernameToEdit]) {
-            users[currentUsernameToEdit].password = newPassword;
-            saveData();
-            renderAdminUsersView();
-            closeModal('changeTeacherPasswordModal');
-            showNotification(`Password for ${currentUsernameToEdit} updated!`, 'success');
-        }
+    function openChangeTeacherPasswordModal(userId) {
+      showNotification('To reset a user\'s password, please use the Supabase dashboard under Authentication > Users.', 'info');
     }
     
     function searchAdminClasses(query) {
@@ -4161,16 +4249,21 @@
         });
     }
 
-    function renderAdminClassesView() {
+    async function renderAdminClassesView() {
       const view = document.getElementById('admin-classesView');
-      const schoolClasses = classes.filter(c => users[c.teacherUsername]?.school === currentUser.school);
+      const schoolClasses = classes; // Already filtered by school on fetch
+      const schoolTeachers = users.filter(u => u.type === 'personal');
+      
+      // Fetch student counts for each class
+      const { data: counts, error } = await db.rpc('get_student_counts_by_class', { school_name: currentUser.school });
+      const studentCounts = new Map((counts || []).map(c => [c.class_id, c.student_count]));
+
       view.innerHTML = `
         <div class="admin-header">
           <h1 class="admin-title">Classes</h1>
           <p class="text-secondary">View and manage all classes in ${sanitizeHTML(currentUser.school)}.</p>
           <div class="admin-controls">
             <input type="text" class="search-input" placeholder="Search classes or teachers..." oninput="searchAdminClasses(this.value)"/>
-            <button class="btn btn-primary" onclick="openCreateClassModal()">Create Class</button>
           </div>
         </div>
         <div class="admin-content">
@@ -4179,38 +4272,26 @@
               <div class="stat-value">${schoolClasses.length}</div>
               <div class="stat-label">Total Classes</div>
             </div>
+             <div class="stat-card">
+              <div class="stat-value">${schoolTeachers.length}</div>
+              <div class="stat-label">Total Teachers</div>
+            </div>
           </div>
           <div id="classesList">
             ${schoolClasses.map(cls => {
-              const classStudents = Object.values(students[cls.id] || {});
-              const totalPoints = classStudents.reduce((sum, s) => sum + s.points, 0);
-              const avgPoints = classStudents.length > 0 ? Math.round(totalPoints / classStudents.length) : 0;
-              const topStudent = classStudents.length > 0 ? classStudents.sort((a,b) => b.points - a.points)[0] : { name: 'N/A', points: 0 };
+              const teacher = users.find(u => u.id === cls.teacher_id);
               return `
               <div class="class-detail-card">
                 <div class="class-detail-header">
                   <div>
                     <h2 class="class-detail-title">${sanitizeHTML(cls.name)}</h2>
-                    <p class="class-detail-teacher">Teacher: ${cls.teacherUsername}</p>
+                    <p class="class-detail-teacher">Teacher: ${teacher ? teacher.username : 'Unknown'}</p>
                   </div>
-                  <button class="btn btn-secondary" onclick="openClassDetailModal('${cls.id}')">View Details</button>
                 </div>
                 <div class="class-stats" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 0;">
                   <div class="class-stat">
-                    <div class="class-stat-value">${classStudents.length}</div>
+                    <div class="class-stat-value">${studentCounts.get(cls.id) || 0}</div>
                     <div class="class-stat-label">Students</div>
-                  </div>
-                  <div class="class-stat">
-                    <div class="class-stat-value">${totalPoints}</div>
-                    <div class="class-stat-label">Total Points</div>
-                  </div>
-                   <div class="class-stat">
-                    <div class="class-stat-value">${avgPoints}</div>
-                    <div class="class-stat-label">Avg. Points</div>
-                  </div>
-                  <div class="class-stat">
-                    <div class="class-stat-value" style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${sanitizeHTML(topStudent.name)}</div>
-                    <div class="stat-label">Top Student (${topStudent.points} pts)</div>
                   </div>
                 </div>
               </div>
@@ -4220,67 +4301,29 @@
       `;
     }
 
-    function openClassDetailModal(classId) {
-      const cls = classes.find(c => c.id === classId);
-      const teacher = users[cls.teacherUsername];
-      const classStudents = Object.values(students[classId] || {});
-      document.getElementById('classDetailTitle').textContent = `Details for ${cls.name}`;
-      document.getElementById('classDetailContent').innerHTML = `
-        <p><strong>Teacher:</strong> ${cls.teacherUsername}</p>
-        <p><strong>Password:</strong> ${teacher.password} <em style="color:var(--text-secondary)">(Visible to admin)</em></p>
-        <h3 style="margin-top: 2rem;">Student Statistics</h3>
-        <table class="students-table responsive-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Current Points</th>
-              <th>Total Earned</th>
-              <th>Total Spent</th>
-              <th>Rewards Claimed</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${classStudents.length > 0 ? classStudents.map(s => {
-                const stats = calculateStudentStats(s.id, classId);
-                return `
-              <tr>
-                <td data-label="Name">${sanitizeHTML(s.name)}</td>
-                <td data-label="Current Points">${s.points}</td>
-                <td data-label="Total Earned" style="color: var(--success-color);">${stats.pointsEarned}</td>
-                <td data-label="Total Spent" style="color: var(--danger-color);">${stats.pointsSpent}</td>
-                <td data-label="Rewards Claimed">${stats.rewardsClaimed}</td>
-              </tr>
-            `}).join('') : `<tr><td colspan="5" class="text-center">No students in this class.</td></tr>`}
-          </tbody>
-        </table>
-      `;
-      openModal('classDetailModal');
-    }
-
     function renderAdminUsersView() {
       const view = document.getElementById('admin-usersView');
-      const schoolUsers = Object.values(users).filter(u => u.school === currentUser.school);
+      const schoolUsers = users; // Already filtered
       const schoolAdmins = schoolUsers.filter(u => u.type === 'admin');
       const schoolTeachers = schoolUsers.filter(u => u.type === 'personal');
       view.innerHTML = `
         <div class="admin-header">
           <h1 class="admin-title">Users</h1>
-          <p class="text-secondary">View and manage all user accounts in ${sanitizeHTML(currentUser.school)}.</p>
-          <div class="admin-controls">
+          <p class="text-secondary">View all user accounts in ${sanitizeHTML(currentUser.school)}.</p>
+           <div class="admin-controls">
             <input type="text" class="search-input" placeholder="Search users..." oninput="searchAdminUsers(this.value)"/>
-            <button class="btn btn-primary" onclick="openCreateTeacherModal()">Create Teacher</button>
-            <button class="btn btn-info" onclick="openCreateAdminModal()">Create Admin</button>
           </div>
         </div>
         <div class="admin-content">
           <h3 class="mb-4">Administrators (${schoolAdmins.length})</h3>
           <table class="students-table responsive-table mb-4">
-            <thead><tr><th>Username</th><th>Created</th></tr></thead>
+            <thead><tr><th>Username</th><th>Email</th><th>Created</th></tr></thead>
             <tbody>
               ${schoolAdmins.map(admin => `
                 <tr>
-                  <td data-label="Username">${admin.username} ${admin.username === currentUser.username ? '(You)' : ''}</td>
-                  <td data-label="Created">${new Date(admin.createdAt).toLocaleDateString()}</td>
+                  <td data-label="Username">${admin.username} ${admin.id === currentUser.id ? '(You)' : ''}</td>
+                  <td data-label="Email">${admin.email}</td>
+                  <td data-label="Created">${new Date(admin.created_at).toLocaleDateString()}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -4288,14 +4331,15 @@
 
           <h3 class="mb-4">Teachers (${schoolTeachers.length})</h3>
           <table class="students-table responsive-table">
-            <thead><tr><th>Username</th><th>Classes</th><th>Created</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Username</th><th>Email</th><th>Classes</th><th>Created</th><th>Actions</th></tr></thead>
             <tbody>
               ${schoolTeachers.map(teacher => `
                 <tr>
                   <td data-label="Username">${teacher.username}</td>
-                  <td data-label="Classes">${classes.filter(c => c.teacherUsername === teacher.username).length}</td>
-                  <td data-label="Created">${new Date(teacher.createdAt).toLocaleDateString()}</td>
-                  <td data-label="Actions"><button class="btn btn-secondary" onclick="openChangeTeacherPasswordModal('${teacher.username}')">Change Password</button></td>
+                  <td data-label="Email">${teacher.email}</td>
+                  <td data-label="Classes">${classes.filter(c => c.teacher_id === teacher.id).length}</td>
+                  <td data-label="Created">${new Date(teacher.created_at).toLocaleDateString()}</td>
+                  <td data-label="Actions"><button class="btn btn-secondary" onclick="openChangeTeacherPasswordModal('${teacher.id}')">Reset Password</button></td>
                 </tr>
               `).join('')}
             </tbody>
@@ -4306,7 +4350,6 @@
 
     function renderAdminEmbedsView() {
       const view = document.getElementById('admin-embedsView');
-      const schoolEmbeds = embeds[currentUser.school] || [];
       view.innerHTML = `
         <div class="admin-header">
           <h1 class="admin-title">Embeds</h1>
@@ -4317,7 +4360,7 @@
         </div>
         <div class="admin-content">
           <div id="adminEmbedsList">
-            ${schoolEmbeds.length > 0 ? schoolEmbeds.map(embed => `
+            ${embeds.length > 0 ? embeds.map(embed => `
               <div class="embed-container" id="embed-admin-${embed.id}">
                 <div class="embed-header" style="display: flex; justify-content: space-between; align-items: center;">
                   <div>
@@ -4340,31 +4383,37 @@
         openModal('addEmbedModal');
     }
 
-    function addEmbed() {
+    async function addEmbed() {
         const name = document.getElementById('embedName').value.trim();
         const url = document.getElementById('embedUrl').value.trim();
         if (!name || !url) {
             showNotification('Please fill in both name and URL', 'error');
             return;
         }
-        if (!embeds[currentUser.school]) {
-            embeds[currentUser.school] = [];
+        
+        const { data, error } = await db.from('embeds').insert({ name, url, school: currentUser.school }).select().single();
+        if (error) {
+            showNotification(`Error: ${error.message}`, 'error');
+            return;
         }
-        embeds[currentUser.school].push({ id: generateId(), name, url });
-        saveData();
+        embeds.push(data);
         renderAdminEmbedsView();
         closeModal('addEmbedModal');
         showNotification('Embed added successfully!', 'success');
     }
 
-    function deleteEmbed(embedId) {
+    async function deleteEmbed(embedId) {
         if (!confirm('Are you sure you want to delete this embed?')) return;
-        if (embeds[currentUser.school]) {
-            embeds[currentUser.school] = embeds[currentUser.school].filter(e => e.id !== embedId);
-            saveData();
-            renderAdminEmbedsView();
-            showNotification('Embed deleted successfully!', 'success');
+        
+        const { error } = await db.from('embeds').delete().eq('id', embedId);
+        if (error) {
+            showNotification(`Error: ${error.message}`, 'error');
+            return;
         }
+
+        embeds = embeds.filter(e => e.id !== embedId);
+        renderAdminEmbedsView();
+        showNotification('Embed deleted successfully!', 'success');
     }
 
     // Emoji Picker
@@ -4391,104 +4440,28 @@
         closeModal('emojiPickerModal');
     }
 
-
-    // Demo Mode
-    function startDemoMode(type) {
-        closeModal('demoModal');
-        demoMode = true;
-
-        // Reset demo data structure
-        const originalUsers = { ...users }; // Preserve original users for logout
-        classes = [];
-        students = {};
-        rewards = {};
-        powerups = {};
-        history = {};
-        reasons = {};
-        embeds = {};
-        users = {}; // Start fresh for demo users
-
-        if (type === 'teacher') {
-            currentUser = { username: 'demoTeacher', school: 'Demo School', type: 'personal' };
-            users[currentUser.username] = currentUser;
-            
-            classes = [{ id: 'demoClass1', name: 'Grade 5 Reading', teacherUsername: 'demoTeacher' }];
-            currentClassId = 'demoClass1';
-            
-            students['demoClass1'] = {
-            's1': { id: 's1', name: 'Alice', points: 125 },
-            's2': { id: 's2', name: 'Bob', points: 210 },
-            's3': { id: 's3', name: 'Charlie', points: 95 },
-            's4': { id: 's4', name: 'Diana', points: 180 },
-            };
-            rewards['demoClass1'] = { 'r1': { id: 'r1', title: 'Free Homework Pass', pointsRequired: 100, type: 'deduct'} };
-            history['demoClass1'] = [];
-            powerups['demoClass1'] = {};
-            reasons['demoClass1'] = ['Good Participation', 'Helping a classmate'];
-            embeds['Demo School'] = [{ id: 'e1', name: 'Wheel of Names', url: 'https://wheelofnames.com/' }, { id: 'e2', name: 'Online Notepad', url: 'https://www.onlinenotepad.io/' }];
-
-        } else { // admin mode
-            currentUser = { username: 'demoAdmin', school: 'Demo School', type: 'admin', email: 'admin@demo.com', createdAt: new Date().toISOString() };
-            users[currentUser.username] = currentUser;
-
-            const teacher1 = { username: 'msDavis', password: '123', type: 'personal', school: 'Demo School', createdAt: new Date().toISOString() };
-            const teacher2 = { username: 'mrChen', password: '123', type: 'personal', school: 'Demo School', createdAt: new Date().toISOString() };
-            users[teacher1.username] = teacher1;
-            users[teacher2.username] = teacher2;
-
-            classes = [
-                { id: 'demoClassAdmin1', name: 'Math Grade 8', teacherUsername: 'msDavis' },
-                { id: 'demoClassAdmin2', name: 'History Grade 8', teacherUsername: 'msDavis' },
-                { id: 'demoClassAdmin3', name: 'Science Grade 7', teacherUsername: 'mrChen' }
-            ];
-            students['demoClassAdmin1'] = { 's_a1': { id: 's_a1', name: 'Eva', points: 150 } };
-            students['demoClassAdmin3'] = { 's_a2': { id: 's_a2', name: 'Frank', points: 200 } };
-            currentClassId = null; // No class selected for admin by default
-            embeds['Demo School'] = [{ id: 'e1', name: 'Wheel of Names', url: 'https://wheelofnames.com/' }];
-        }
-
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('signupScreen').style.display = 'none';
-        document.getElementById('appLayout').classList.add('active');
-
-        const switchBtn = document.getElementById('switchDemoViewBtn');
-        switchBtn.style.display = 'inline-flex';
-        switchBtn.textContent = type === 'teacher' ? 'Switch to Admin View' : 'Switch to Teacher View';
-        
-        initializeApp();
-        showNotification(`Demo mode activated (${type} view). Changes will not be saved.`, 'info');
-    }
-    
-    function switchDemoView() {
-        if (!demoMode) return;
-        const currentType = currentUser.type;
-        if (currentType === 'personal') { // is a teacher
-            startDemoMode('admin');
-        } else { // is an admin
-            startDemoMode('teacher');
-        }
-    }
-
+    // ===================================================================================
+    // MAIN INITIALIZATION
+    // ===================================================================================
 
     // Event Listeners
     document.getElementById('signupBtn').addEventListener('click', signup);
     document.getElementById('loginBtn').addEventListener('click', login);
     window.addEventListener('hashchange', router);
 
-    // Init
-    function init() {
-      loadData();
-      if (currentUser) {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('signupScreen').style.display = 'none';
-        document.getElementById('appLayout').classList.add('active');
-        initializeApp();
-      } else {
-        showLogin();
-      }
-    }
+    // This is the new entry point of the app
+    db.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN') {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('signupScreen').style.display = 'none';
+            document.getElementById('appLayout').classList.add('active');
+            initializeApp(session.user);
+        } else if (event === 'SIGNED_OUT') {
+            document.getElementById('appLayout').classList.remove('active');
+            showLogin();
+        }
+    });
 
-    init();
   </script>
 </body>
 </html>
